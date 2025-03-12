@@ -7,17 +7,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
 @Data
-@Document(collection = "user")
-public class UserEntity {
+@Document(collection = "reviews")
+public class ReviewEntity {
     @Id
     private String id;
-    private String username;
-    private String password;
-    private String email;
-    private String role; // user, owner, admin
-    private String fullName;
-    private String phone;
-    private String avatar;
+    private String postId; // Post ID
+    private String userId; // User ID
+    private int rating; // 1-5
+    private String comment;
     private Date createdAt;
     private Date updatedAt;
 }

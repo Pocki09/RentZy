@@ -33,3 +33,9 @@ build/
 .vscode/
 
 .env
+
+RentZy.git
+
+.gitignore
+
+.gitattributes
