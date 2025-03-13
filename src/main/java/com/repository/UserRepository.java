@@ -1,6 +1,6 @@
-package repository;
+package com.repository;
 
-import model.entity.UserEntity;
+import com.model.entity.UserEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

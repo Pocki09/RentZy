@@ -1,4 +1,4 @@
-package utils;
+package com.utils;
 
 public class Location {
     private double lat;
