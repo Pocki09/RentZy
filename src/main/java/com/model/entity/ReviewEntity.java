@@ -13,7 +13,7 @@ public class ReviewEntity {
     private String id;
     private String postId; // Post ID
     private String userId; // User ID
-    private int rating; // 1-5
+    private Integer rating; // 1-5
     private String comment;
     private Date createdAt;
     private Date updatedAt;

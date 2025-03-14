@@ -1,5 +1,6 @@
 package com.model.entity;
 
+import com.enums.UserRole;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,7 +15,7 @@ public class UserEntity {
     private String username;
     private String password;
     private String email;
-    private String role; // user, owner, admin
+    private UserRole role; // user, owner, admin
     private String fullName;
     private String phone;
     private String avatar;
