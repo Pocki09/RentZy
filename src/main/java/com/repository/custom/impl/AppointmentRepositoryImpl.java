@@ -29,11 +29,11 @@ public class AppointmentRepositoryImpl implements CustomAppointmentRepository {
             if (startDate.after(endDate)) {
                 throw new IllegalArgumentException("startDate phải trước endDate");
             }
-            criteria = Criteria.where("appointmentDate").gte(startDate).lte(endDate);
+            criteria = Criteria.where("date").gte(startDate).lte(endDate);
         } else if (startDate != null) {
-            criteria = Criteria.where("appointmentDate").gte(startDate);
+            criteria = Criteria.where("date").gte(startDate);
         } else if (endDate != null) {
-            criteria = Criteria.where("appointmentDate").lte(endDate);
+            criteria = Criteria.where("date").lte(endDate);
         }
 
         if (!criteria.getCriteriaObject().isEmpty()) {

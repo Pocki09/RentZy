@@ -1,13 +1,14 @@
 package com.repository;
 
 import com.model.entity.AppointmentEntity;
+import com.repository.custom.CustomAppointmentRepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-public interface AppointmentRepository extends MongoRepository<AppointmentEntity, String> {
+public interface AppointmentRepository extends MongoRepository<AppointmentEntity, String>, CustomAppointmentRepository {
     // Tìm lịch hẹn theo ID
     Optional<AppointmentEntity> findById(String id);
 
