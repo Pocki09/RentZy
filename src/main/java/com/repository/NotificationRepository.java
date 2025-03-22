@@ -2,10 +2,12 @@ package com.repository;
 
 import com.model.entity.NotificationEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface NotificationRepository extends MongoRepository<NotificationEntity, String> {
     // 1. Tìm thông báo theo ID
     Optional<NotificationEntity> findById(String id);

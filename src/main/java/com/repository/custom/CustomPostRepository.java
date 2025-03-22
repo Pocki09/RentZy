@@ -1,17 +1,14 @@
 package com.repository.custom;
 
 import com.enums.PostStatus;
+import com.model.dto.PostSearchCriteria;
 import com.model.entity.PostEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface CustomPostRepository {
-    // Tìm bài đăng theo tiêu đề và trạng thái
-    List<PostEntity> findByTitleAndStatus(String title, PostStatus status);
-
-    // Tìm bài đăng theo địa chỉ và khoảng giá
-    List<PostEntity> findByAddressAndPriceBetween(String address, double minPrice, double maxPrice);
-
-    // Tìm bài đăng theo tiện ích và trạng thái
-    List<PostEntity> findByUtilitiesAndStatus(String utility, PostStatus status);
+    // Tìm bài đăng theo nhiều tiêu chí (địa chỉ, giá, tiện ích, trạng thái)
+    Page<PostEntity> findByFilters(PostSearchCriteria criteria, Pageable pageable);
 }
