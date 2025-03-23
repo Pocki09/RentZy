@@ -1,6 +1,8 @@
 package com.repository;
 
 import com.model.entity.NotificationEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,16 +15,20 @@ public interface NotificationRepository extends MongoRepository<NotificationEnti
     Optional<NotificationEntity> findById(String id);
 
     // 2. Tìm thông báo theo người dùng (userId)
+    Page<NotificationEntity> findByUserId(String userId, Pageable pageable);
+
     List<NotificationEntity> findByUserId(String userId);
 
     // 3. Tìm thông báo theo loại (type)
-    List<NotificationEntity> findByType(String type);
+    Page<NotificationEntity> findByType(String type, Pageable pageable);
 
     // 4. Tìm thông báo chưa đọc (isRead = false)
-    List<NotificationEntity> findByIsReadFalse();
+    Page<NotificationEntity> findByIsReadFalse(Pageable pageable);
 
     // 5. Tìm thông báo theo loại và trạng thái đã đọc
-    List<NotificationEntity> findByTypeAndIsRead(String type, boolean isRead);
+    Page<NotificationEntity> findByTypeAndIsRead(String type, boolean isRead, Pageable pageable);
+
+    Page<NotificationEntity> findByUserIdAndIsRead(String userId, boolean isRead, Pageable pageable);
 
     // 6. Kiểm tra xem thông báo có tồn tại không
     boolean existsById(String id);
