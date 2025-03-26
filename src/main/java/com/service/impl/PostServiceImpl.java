@@ -3,7 +3,7 @@ package com.service.impl;
 import com.converter.PostConverter;
 import com.exception.ResourceNotFoundException;
 import com.model.dto.PostDTO;
-import com.model.dto.PostSearchCriteria;
+import com.model.dto.PostSearchDTO;
 import com.model.entity.PostEntity;
 import com.repository.PostRepository;
 import com.service.PostService;
@@ -56,7 +56,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Page<PostDTO> searchPosts(PostSearchCriteria criteria, Pageable pageable) {
+    public Page<PostDTO> searchPosts(PostSearchDTO criteria, Pageable pageable) {
         Page<PostEntity> postEntities = postRepository.findByFilters(criteria, pageable);
         return postEntities.map(postConverter::toDTO);
     }

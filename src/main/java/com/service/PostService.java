@@ -1,8 +1,7 @@
 package com.service;
 
-import com.enums.PostStatus;
 import com.model.dto.PostDTO;
-import com.model.dto.PostSearchCriteria;
+import com.model.dto.PostSearchDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,5 +13,5 @@ public interface PostService {
     PostDTO createPost(PostDTO postDTO);
     PostDTO updatePost(String id, PostDTO postDTO);
     void deletePost(String id);
-    Page<PostDTO> searchPosts(PostSearchCriteria criteria, Pageable pageable);
+    Page<PostDTO> searchPosts(PostSearchDTO criteria, Pageable pageable);
 }

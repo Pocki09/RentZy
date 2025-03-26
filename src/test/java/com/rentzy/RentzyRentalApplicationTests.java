@@ -1,5 +1,7 @@
 package com.rentzy;
 
+
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -8,6 +10,6 @@ class RentzyRentalApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Test logic here
 	}
-
 }
