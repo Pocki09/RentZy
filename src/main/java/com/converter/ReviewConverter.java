@@ -8,7 +8,8 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface ReviewConverter {
-    @Mapping(target = "id", ignore = true) // Không cập nhật ID
+     // Không cập nhật ID
+    @Mapping(target = "id", ignore = true)
     void updateReviewFromDto(ReviewDTO reviewDTO, @MappingTarget ReviewEntity reviewEntity);
 
     ReviewDTO toDTO(ReviewEntity reviewEntity);

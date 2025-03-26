@@ -1,6 +1,6 @@
 package com.repository.custom.impl;
 
-import com.model.dto.PostSearchCriteria;
+import com.model.dto.PostSearchDTO;
 import com.model.entity.PostEntity;
 import com.repository.custom.CustomPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class PostRepositoryImpl implements CustomPostRepository {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public Page<PostEntity> findByFilters(PostSearchCriteria criteria, Pageable pageable) {
+    public Page<PostEntity> findByFilters(PostSearchDTO criteria, Pageable pageable) {
         Query query = new Query();
         List<Criteria> criteriaList = new ArrayList<>();
 
