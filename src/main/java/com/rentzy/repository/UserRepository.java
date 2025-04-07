@@ -7,15 +7,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserRepository extends MongoRepository<UserEntity, String> {
     Page<UserEntity> findAll(Pageable pageable);
+    Page<UserEntity> findByRole(UserRole role, Pageable pageable);
     Optional<UserEntity> findByUsername(String username);
     Optional<UserEntity> findByEmail(String email);
-    Page<UserEntity> findByRole(UserRole role);
     Page<UserEntity> findByFullNameIgnoreCase(String fullName);
     Optional<UserEntity> findByPhone(String phone);
     boolean existsByUsername(String username);
