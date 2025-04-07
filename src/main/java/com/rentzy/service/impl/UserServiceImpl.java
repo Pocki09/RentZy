@@ -99,8 +99,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDTO> getUsersByRole(UserRole role) {
-        Page<UserEntity> users = userRepository.findByRole(role);
+    public Page<UserDTO> getUsersByRole(UserRole role, Pageable pageable) {
+        Page<UserEntity> users = userRepository.findByRole(role, pageable);
 
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found with role: " + role);

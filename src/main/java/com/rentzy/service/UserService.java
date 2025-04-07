@@ -13,7 +13,7 @@ public interface UserService {
     UserDTO createUser(UserDTO userDTO);
     UserDTO updateUser(String id, UserDTO userDTO);
     void deleteUser(String id);
-    Page<UserDTO> getUsersByRole(UserRole role);
+    Page<UserDTO> getUsersByRole(UserRole role, Pageable pageable);
     boolean isUsernameExists(String username);
     boolean isEmailExists(String email);
 }

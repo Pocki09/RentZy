@@ -81,9 +81,13 @@ public class UserController {
     }
 
     @GetMapping("/role/{role}")
-    public ResponseEntity<?> getUsersByRole(@PathVariable UserRole role) {
+    public ResponseEntity<?> getUsersByRole(
+            @PathVariable UserRole role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
         try {
-            Page<UserDTO> users = userService.getUsersByRole(role);
+            Page<UserDTO> users = userService.getUsersByRole(role, pageable);
             return ResponseEntity.ok(users);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
