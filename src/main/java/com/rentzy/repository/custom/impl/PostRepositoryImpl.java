@@ -1,7 +1,7 @@
 package com.rentzy.repository.custom.impl;
 
 import com.rentzy.model.dto.PostSearchDTO;
-import com.rentzy.model.entity.PostEntity;
+import com.rentzy.entity.PostEntity;
 import com.rentzy.repository.custom.CustomPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

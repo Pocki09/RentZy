@@ -4,7 +4,7 @@ import com.rentzy.converter.PostConverter;
 import com.rentzy.exception.ResourceNotFoundException;
 import com.rentzy.model.dto.PostDTO;
 import com.rentzy.model.dto.PostSearchDTO;
-import com.rentzy.model.entity.PostEntity;
+import com.rentzy.entity.PostEntity;
 import com.rentzy.repository.PostRepository;
 import com.rentzy.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;

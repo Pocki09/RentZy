@@ -1,7 +1,7 @@
 package com.rentzy.converter;
 
 import com.rentzy.model.dto.ReviewDTO;
-import com.rentzy.model.entity.ReviewEntity;
+import com.rentzy.entity.ReviewEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 

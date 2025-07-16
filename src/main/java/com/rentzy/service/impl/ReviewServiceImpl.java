@@ -3,13 +3,13 @@ package com.rentzy.service.impl;
 import com.rentzy.converter.ReviewConverter;
 import com.rentzy.exception.ResourceNotFoundException;
 import com.rentzy.model.dto.ReviewDTO;
-import com.rentzy.model.entity.ReviewEntity;
+import com.rentzy.entity.ReviewEntity;
 import com.rentzy.repository.ReviewRepository;
 import com.rentzy.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -20,9 +20,9 @@ public class ReviewServiceImpl implements ReviewService {
     private ReviewConverter reviewConverter;
 
     @Override
-    public List<ReviewDTO> getAllReviews() {
-        List<ReviewEntity> reviewEntity = reviewRepository.findAll();
-        return reviewEntity.stream().map(reviewConverter::toDTO).toList();
+    public Page<ReviewDTO> getAllReviews(Pageable pageable) {
+        Page<ReviewEntity> page = reviewRepository.findAll(pageable);
+        return page.map(reviewConverter::toDTO);
     }
 
     @Override
@@ -54,21 +54,21 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewDTO> getReviewByUserId(String userId) {
-        List<ReviewEntity> reviewEntity = reviewRepository.findByUserId(userId);
+    public Page<ReviewDTO> getReviewByUserId(String userId, Pageable pageable) {
+        Page<ReviewEntity> reviewEntity = reviewRepository.findByUserId(userId, pageable);
         if (reviewEntity.isEmpty()) {
             throw new ResourceNotFoundException("No reviews found for user ID: " + userId);
         }
-        return reviewEntity.stream().map(reviewConverter::toDTO).toList();
+        return reviewEntity.map(reviewConverter::toDTO);
     }
 
     @Override
-    public List<ReviewDTO> getReviewByPostId(String postId) {
-        List<ReviewEntity> reviewEntity = reviewRepository.findByPostId(postId);
+    public Page<ReviewDTO> getReviewByPostId(String postId, Pageable pageable) {
+        Page<ReviewEntity> reviewEntity = reviewRepository.findByPostId(postId, pageable);
         if (reviewEntity.isEmpty()) {
             throw new ResourceNotFoundException("No reviews found for post ID: " + postId);
         }
-        return reviewEntity.stream().map(reviewConverter::toDTO).toList();
+        return reviewEntity.map(reviewConverter::toDTO);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.rentzy.repository;
 
 import com.rentzy.enums.PostStatus;
-import com.rentzy.model.entity.PostEntity;
+import com.rentzy.entity.PostEntity;
 import com.rentzy.repository.custom.CustomPostRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

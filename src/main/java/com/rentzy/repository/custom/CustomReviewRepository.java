@@ -1,6 +1,6 @@
 package com.rentzy.repository.custom;
 
-import com.rentzy.model.entity.ReviewEntity;
+import com.rentzy.entity.ReviewEntity;
 
 import java.util.List;
 

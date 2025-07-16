@@ -1,20 +1,16 @@
 package com.rentzy.service;
 
-import com.rentzy.model.dto.AppointmentDTO;
-import com.rentzy.model.dto.AppointmentSearchDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.rentzy.model.dto.response.AppointmentResponseDTO;
+import com.rentzy.model.dto.request.AppointmentRequestDTO;
 
 import java.util.Date;
 import java.util.Optional;
 
 public interface AppointmentService {
-    AppointmentDTO createAppointment(AppointmentDTO appointmentDTO);
-    AppointmentDTO updateAppointment(String id, AppointmentDTO appointmentDTO);
+    AppointmentResponseDTO createAppointment(AppointmentRequestDTO request);
+    AppointmentResponseDTO updateAppointment(String id, AppointmentRequestDTO request);
     void cancelAppointment(String id);
-    Optional<AppointmentDTO> getAppointmentById(String id);
-
-    Page<AppointmentDTO> searchAppointments(AppointmentSearchDTO searchCriteria, Pageable pageable);
+    Optional<AppointmentResponseDTO> getAppointmentById(String id);
     boolean isTimeSlotAvailable(String postId, Date startTime, Date endTime);
     void sendAppointmentReminder(String appointmentId);
 }

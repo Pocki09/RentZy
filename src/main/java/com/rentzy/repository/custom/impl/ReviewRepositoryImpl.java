@@ -1,6 +1,6 @@
 package com.rentzy.repository.custom.impl;
 
-import com.rentzy.model.entity.ReviewEntity;
+import com.rentzy.entity.ReviewEntity;
 import com.rentzy.repository.custom.CustomReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;

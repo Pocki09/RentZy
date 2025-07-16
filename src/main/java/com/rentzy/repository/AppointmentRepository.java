@@ -1,14 +1,13 @@
 package com.rentzy.repository;
 
-import com.rentzy.model.entity.AppointmentEntity;
-import com.rentzy.repository.custom.CustomAppointmentRepository;
+import com.rentzy.entity.AppointmentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-public interface AppointmentRepository extends MongoRepository<AppointmentEntity, String>, CustomAppointmentRepository {
+public interface AppointmentRepository extends MongoRepository<AppointmentEntity, String> {
     // Tìm lịch hẹn theo ID
     Optional<AppointmentEntity> findById(String id);
 
