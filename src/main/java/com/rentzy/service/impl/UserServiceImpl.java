@@ -4,82 +4,93 @@ import com.rentzy.converter.UserConverter;
 import com.rentzy.enums.UserRole;
 import com.rentzy.exception.ResourceNotFoundException;
 import com.rentzy.exception.UserAlreadyExistsException;
-import com.rentzy.model.dto.UserDTO;
-import com.rentzy.model.entity.UserEntity;
+import com.rentzy.model.dto.request.UserRequestDTO;
+import com.rentzy.model.dto.response.UserResponseDTO;
+import com.rentzy.entity.UserEntity;
 import com.rentzy.repository.UserRepository;
 import com.rentzy.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserConverter userConverter;
+    UserRepository userRepository;
+    UserConverter userConverter;
+    PasswordEncoder passwordEncoder;
 
-    private static final Pattern EMAIL_PATTERN =
+    static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     @Override
-    public Page<UserDTO> getAllUsers(Pageable pageable) {
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        log.info("Get all users");
         Page<UserEntity> userEntities = userRepository.findAll(pageable);
         return userEntities.map(userConverter::toDTO);
     }
 
     @Override
-    public UserDTO getUserById(String id) {
+    public UserResponseDTO getUserById(String id) {
         UserEntity userEntity = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return userConverter.toDTO(userEntity);
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) {
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
+    public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
+        if (userRepository.existsByUsername(userRequestDTO.getUsername())) {
             throw new UserAlreadyExistsException("Username already exists");
         }
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
+        if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
             throw new UserAlreadyExistsException("Email already exists");
         }
-        UserEntity userEntity = userConverter.toEntity(userDTO);
+
+        userRequestDTO.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+
+        userRequestDTO.setRole(UserRole.USER);
+
+        UserEntity userEntity = userConverter.toEntity(userRequestDTO);
         UserEntity savedUser = userRepository.save(userEntity);
         return userConverter.toDTO(savedUser);
     }
 
     @Override
-    public UserDTO updateUser(String id, UserDTO userDTO) {
+    public UserResponseDTO updateUser(String id, UserRequestDTO userRequestDTO) {
         UserEntity userEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         // Kiểm tra username có bị trùng không
-        if(!userEntity.getUsername().equals(userDTO.getUsername())
-        && userRepository.existsByUsername(userDTO.getUsername())) {
+        if(!userEntity.getUsername().equals(userRequestDTO.getUsername())
+        && userRepository.existsByUsername(userRequestDTO.getUsername())) {
             throw new UserAlreadyExistsException("Username already exists");
         }
 
         // Kiểm tra email có bị trùng không
-        if(!userEntity.getEmail().equals(userDTO.getEmail())
-        && userRepository.existsByEmail(userDTO.getEmail())) {
+        if(!userEntity.getEmail().equals(userRequestDTO.getEmail())
+        && userRepository.existsByEmail(userRequestDTO.getEmail())) {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
-        userEntity.setUsername(userDTO.getUsername());
-        userEntity.setPhone(userDTO.getPhone());
-        userEntity.setAvatar(userDTO.getAvatar());
+        userEntity.setUsername(userRequestDTO.getUsername());
+        userEntity.setPhone(userRequestDTO.getPhone());
+        userEntity.setAvatar(userRequestDTO.getAvatar());
 
-        if (!userEntity.getUsername().equals(userDTO.getUsername())) {
-            userEntity.setUsername(userDTO.getUsername());
+        if (!userEntity.getUsername().equals(userRequestDTO.getUsername())) {
+            userEntity.setUsername(userRequestDTO.getUsername());
         }
-        if (!userEntity.getEmail().equals(userDTO.getEmail())) {
-            userEntity.setEmail(userDTO.getEmail());
+        if (!userEntity.getEmail().equals(userRequestDTO.getEmail())) {
+            userEntity.setEmail(userRequestDTO.getEmail());
         }
 
         UserEntity result = userRepository.save(userEntity);
@@ -99,7 +110,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDTO> getUsersByRole(UserRole role, Pageable pageable) {
+    public Page<UserResponseDTO> getUsersByRole(UserRole role, Pageable pageable) {
         Page<UserEntity> users = userRepository.findByRole(role, pageable);
 
         if (users.isEmpty()) {

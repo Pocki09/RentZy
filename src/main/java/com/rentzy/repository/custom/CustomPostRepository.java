@@ -1,7 +1,7 @@
 package com.rentzy.repository.custom;
 
 import com.rentzy.model.dto.PostSearchDTO;
-import com.rentzy.model.entity.PostEntity;
+import com.rentzy.entity.PostEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -10,6 +10,9 @@ import java.util.Set;
 
 @Data
 public class PostDTO {
+    @NotNull
+    private String id;
+
     @NotBlank(message = "Title is required")
     private String title;
 

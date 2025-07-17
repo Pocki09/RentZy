@@ -1,7 +1,7 @@
 package com.rentzy.converter;
 
 import com.rentzy.model.dto.NotificationDTO;
-import com.rentzy.model.entity.NotificationEntity;
+import com.rentzy.entity.NotificationEntity;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

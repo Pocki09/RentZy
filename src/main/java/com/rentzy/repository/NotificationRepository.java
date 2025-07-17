@@ -1,6 +1,7 @@
 package com.rentzy.repository;
 
-import com.rentzy.model.entity.NotificationEntity;
+import com.rentzy.enums.NotificationType;
+import com.rentzy.entity.NotificationEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -26,7 +27,7 @@ public interface NotificationRepository extends MongoRepository<NotificationEnti
     Page<NotificationEntity> findByIsReadFalse(Pageable pageable);
 
     // 5. Tìm thông báo theo loại và trạng thái đã đọc
-    Page<NotificationEntity> findByTypeAndIsRead(String type, boolean isRead, Pageable pageable);
+    Page<NotificationEntity> findByTypeAndIsRead(NotificationType type, boolean isRead, Pageable pageable);
 
     Page<NotificationEntity> findByUserIdAndIsRead(String userId, boolean isRead, Pageable pageable);
 

@@ -1,7 +1,7 @@
 package com.rentzy.converter;
 
 import com.rentzy.model.dto.PostDTO;
-import com.rentzy.model.entity.PostEntity;
+import com.rentzy.entity.PostEntity;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
