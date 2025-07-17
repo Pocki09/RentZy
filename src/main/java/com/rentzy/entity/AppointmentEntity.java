@@ -30,4 +30,5 @@ public class AppointmentEntity {
     private String contactPhone;
     private Date cancelledAt;
     private Date confirmedAt;
+    private Date completedAt;
 }

@@ -1,10 +1,7 @@
 package com.rentzy.model.dto.response;
 
 import com.rentzy.enums.AppointmentStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
 import java.util.Date;
 
 @Data
@@ -13,7 +10,6 @@ public class AppointmentResponseDTO {
 
     private String postId;
 
-  
     private String userId;
 
     private Date appointmentDate;
@@ -30,4 +26,9 @@ public class AppointmentResponseDTO {
 
     private Date updatedAt;
 
+    private Date confirmedAt;
+
+    private Date cancelledAt;
+
+    private Date completedAt;
 }
