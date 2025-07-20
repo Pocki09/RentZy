@@ -28,7 +28,7 @@ public class UserRequestDTO {
     @NotBlank(message = "Phone là bắt buộc")
     @Pattern(regexp = "^(\\+\\d{1,3})?\\d{10,12}$", message = "Phone phải hợp lệ")
     private String phone;
-
+    private String cancellationReason;
     private String dob;
     private String avatar;
 }
