@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 public interface AppointmentRepository extends MongoRepository<AppointmentEntity, String> {
@@ -40,4 +41,7 @@ public interface AppointmentRepository extends MongoRepository<AppointmentEntity
 
     @Query(value = "{'status': ?0}", count = true)
     long countAppointmentsByStatus(AppointmentStatus status);
+
+    @Query("{'postId':?0, 'date':?1, 'status':{$in:[?2,?3]}}")
+    List<AppointmentEntity> findConflictingAppointments(String postId, Date date, AppointmentStatus confimed, AppointmentStatus pending);
 }

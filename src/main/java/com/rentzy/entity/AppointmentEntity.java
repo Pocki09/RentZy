@@ -25,6 +25,7 @@ public class AppointmentEntity {
     @LastModifiedDate
     private Date updatedAt;
     private String notes;
+    private String cancellationReason;
     private Integer durationMinutes;
     private Boolean reminderSent = false;
     private String contactPhone;

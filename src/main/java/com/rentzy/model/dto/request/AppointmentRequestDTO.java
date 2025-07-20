@@ -8,6 +8,8 @@ import java.util.Date;
 
 @Data
 public class AppointmentRequestDTO {
+    private String appointmentId;
+
     @NotBlank(message = "Post ID is required")
     private String postId;
 
