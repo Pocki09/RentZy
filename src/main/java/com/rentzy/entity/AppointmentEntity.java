@@ -26,6 +26,7 @@ public class AppointmentEntity {
     private Date updatedAt;
     private String notes;
     private String cancellationReason;
+    private String rejectionReason;
     private Integer durationMinutes;
     private Boolean reminderSent = false;
     private String contactPhone;

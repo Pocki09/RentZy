@@ -11,15 +11,14 @@ import java.util.Optional;
 public interface AppointmentService {
     AppointmentResponseDTO createAppointment(AppointmentRequestDTO request);
     Optional<AppointmentResponseDTO> getAppointmentById(String id);
-    AppointmentResponseDTO updateAppointment(String id, AppointmentRequestDTO request);
     Page<AppointmentResponseDTO> getAppointmentsByPostId(String postId, Pageable pageable);
     Page<AppointmentResponseDTO> getAppointmentsByUserId(String userId, Pageable pageable);
     Page<AppointmentResponseDTO> getAppointmentsByOwnerId(String ownerId, Pageable pageable);
     Page<AppointmentResponseDTO> getAppointmentsByDate(Date date, Pageable pageable);
-    void cancelAppointment(String id);
-    void rejectAppointment(String id);
-    void completeAppointment(String id);
+    AppointmentResponseDTO confirmAppointment(String appointmentId, String ownerId);
+    AppointmentResponseDTO cancelAppointment(String appointmentId, String ownerId, String reason);
+    AppointmentResponseDTO rejectAppointment(String appointmentId, String ownerId, String reason);
+    AppointmentResponseDTO completeAppointment(String appointmentId, String ownerId);
     AppointmentResponseDTO rescheduleAppointment(String id, AppointmentRequestDTO request);
-    boolean isTimeSlotAvailable(String postId, Date startTime, Date endTime);
     void sendAppointmentReminder(String appointmentId);
 }
