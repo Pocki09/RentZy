@@ -16,9 +16,6 @@ public class AppointmentRequestDTO {
     @NotBlank(message = "User ID is required")
     private String userId;
 
-    @NotBlank(message = "Owner ID is required")
-    private String ownerId;
-
     @NotNull(message = "Date is required")
     private Date appointmentDate;
 
