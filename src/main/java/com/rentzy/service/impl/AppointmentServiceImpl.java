@@ -43,6 +43,10 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Post is not found");
         }
 
+        if (request.getUserId().equals(post.get().getCreatedBy())) {
+            throw new IllegalArgumentException("Không thể đặt lịch với chính mình");
+        }
+
         validateAppointmentTime(request.getAppointmentDate());
         validateNoConflict(request);
 
@@ -59,7 +63,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     public Optional<AppointmentResponseDTO> getAppointmentById(String id) {
         return Optional.empty();
     }
-
 
     @Override
     public Page<AppointmentResponseDTO> getAppointmentsByPostId(String postId, Pageable pageable) {
@@ -105,11 +108,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public AppointmentResponseDTO cancelAppointment(String appointmentId, String ownerId, String reason) {
-        // Thiếu xét phải là cuộc hẹn giữa chính owner và user đó
+    public AppointmentResponseDTO cancelAppointment(String appointmentId, String currentUserId, String reason) {
         AppointmentEntity appointmentEntity = appointmentRepository.findById(appointmentId).orElse(null);
         if (appointmentEntity == null) {
             throw new IllegalArgumentException("Appointment is not found");
+        }
+
+        if (!isOwner(appointmentId, currentUserId) && !isUser(appointmentId, currentUserId)){
+            throw new IllegalArgumentException("you are not authorized to cancel this appointment");
         }
 
         if (appointmentEntity.getStatus() != AppointmentStatus.PENDING){
@@ -149,12 +155,54 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public AppointmentResponseDTO completeAppointment(String appointmentId, String ownerId) {
-        return null;
+        AppointmentEntity appointmentEntity = appointmentRepository.findById(appointmentId).orElse(null);
+        if (appointmentEntity == null) {
+            throw new IllegalArgumentException("Appointment is not found");
+        }
+
+        if (!isOwner(appointmentId, ownerId)){
+            throw new IllegalArgumentException("only owner can complete appointment");
+        }
+
+        if (appointmentEntity.getStatus() != AppointmentStatus.CONFIRMED){
+            throw new IllegalArgumentException("Can only complete confirmed appointments. Current status: " + appointmentEntity.getStatus());
+        }
+
+        appointmentEntity.setStatus(AppointmentStatus.COMPLETED);
+        appointmentEntity.setCompletedAt(new Date());
+        appointmentEntity.setUpdatedAt(new Date());
+
+        AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+        return appointmentConverter.toDTO(savedEntity);
     }
 
     @Override
-    public AppointmentResponseDTO rescheduleAppointment(String id, AppointmentRequestDTO request) {
-        return null;
+    public AppointmentResponseDTO rescheduleAppointment(AppointmentRequestDTO request) {
+        AppointmentEntity appointmentEntity = appointmentRepository.findById(request.getAppointmentId()).orElse(null);
+        if (appointmentEntity == null) {
+            throw new IllegalArgumentException("Appointment is not found");
+        }
+
+        if (!isOwner(request.getAppointmentId(), request.getUserId()) && !isUser(request.getAppointmentId(), request.getUserId())){
+            throw new IllegalArgumentException("you are not authorized to cancel this appointment");
+        }
+
+        if (appointmentEntity.getStatus() == AppointmentStatus.COMPLETED
+                || appointmentEntity.getStatus() == AppointmentStatus.CANCELLED){
+            throw new IllegalArgumentException("Cannot reschedule completed or cancelled appointment");
+        }
+
+        validateAppointmentTime(request.getAppointmentDate());
+        int duration = request.getDurationMinutes() != null ? request.getDurationMinutes() : DEFAULT_APPOINTMENT_DURATION;
+        validateNoConflict(request);
+
+        appointmentEntity.setAppointmentDate(request.getAppointmentDate());
+        appointmentEntity.setDurationMinutes(duration);
+        appointmentEntity.setStatus(AppointmentStatus.PENDING);
+        appointmentEntity.setUpdatedAt(new Date());
+
+        AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+        return appointmentConverter.toDTO(savedEntity);
     }
 
     @Override
@@ -217,5 +265,15 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         AppointmentEntity appointmentEntity = appointment.get();
         return appointmentEntity.getOwnerId().equals(userId);
+    }
+
+    private boolean isUser(String appointmentId, String userId){
+        Optional<AppointmentEntity> appointment = appointmentRepository.findById(appointmentId);
+        if (appointment.isEmpty()){
+            return false;
+        }
+
+        AppointmentEntity appointmentEntity = appointment.get();
+        return appointmentEntity.getUserId().equals(userId);
     }
 }
