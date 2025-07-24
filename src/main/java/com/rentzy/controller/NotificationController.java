@@ -2,7 +2,7 @@ package com.rentzy.controller;
 
 import com.rentzy.exception.ResourceNotFoundException;
 import com.rentzy.model.dto.FilterParams;
-import com.rentzy.model.dto.NotificationDTO;
+import com.rentzy.model.dto.request.NotificationRequestDTO;
 import com.rentzy.service.NotificationService;
 import com.rentzy.utils.PageableUtils;
 import jakarta.validation.Valid;
@@ -24,28 +24,28 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<NotificationDTO>> getAllNotifications(
+    public ResponseEntity<Page<NotificationRequestDTO>> getAllNotifications(
             @Valid @ModelAttribute FilterParams filterParams) {
         Pageable pageable = PageableUtils.buildPageable(filterParams, 10);
-        Page<NotificationDTO> page = notificationService.getAllNotifications(pageable);
+        Page<NotificationRequestDTO> page = notificationService.getAllNotifications(pageable);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<NotificationDTO>> getNotificationsByUser(
+    public ResponseEntity<Page<NotificationRequestDTO>> getNotificationsByUser(
             @PathVariable String userId,
             @Valid @ModelAttribute FilterParams filterParams) {
         Pageable pageable = PageableUtils.buildPageable(filterParams, 10);
-        Page<NotificationDTO> page = notificationService.getNotificationsByUserId(userId, pageable);
+        Page<NotificationRequestDTO> page = notificationService.getNotificationsByUserId(userId, pageable);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/user/{userId}/unread")
-    public ResponseEntity<Page<NotificationDTO>> getUnreadNotifications(
+    public ResponseEntity<Page<NotificationRequestDTO>> getUnreadNotifications(
             @PathVariable String userId,
             @Valid @ModelAttribute FilterParams filterParams) {
         Pageable pageable = PageableUtils.buildPageable(filterParams, 10);
-        Page<NotificationDTO> page = notificationService.getUnreadNotificationsByUserId(userId, pageable);
+        Page<NotificationRequestDTO> page = notificationService.getUnreadNotificationsByUserId(userId, pageable);
         return ResponseEntity.ok(page);
     }
 

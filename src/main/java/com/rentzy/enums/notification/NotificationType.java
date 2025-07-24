@@ -1,4 +1,4 @@
-package com.rentzy.enums;
+package com.rentzy.enums.notification;
 
 public enum NotificationType {
     APPOINTMENT,

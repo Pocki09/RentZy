@@ -1,39 +1,25 @@
 package com.rentzy.repository;
 
-import com.rentzy.enums.NotificationType;
 import com.rentzy.entity.NotificationEntity;
+import com.rentzy.enums.notification.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Date;
 
 @Repository
 public interface NotificationRepository extends MongoRepository<NotificationEntity, String> {
-    // 1. Tìm thông báo theo ID
-    Optional<NotificationEntity> findById(String id);
+    Page<NotificationEntity> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+    Page<NotificationEntity> findByUserIdAndReadFalseOrderByCreatedAtDesc(String userId, Pageable pageable);
 
-    // 2. Tìm thông báo theo người dùng (userId)
-    Page<NotificationEntity> findByUserId(String userId, Pageable pageable);
+    long countByUserIdAndReadFalse(String userId);
 
-    List<NotificationEntity> findByUserId(String userId);
+    Page<NotificationEntity> findByUserIdAndType(String userId, NotificationType type, Pageable pageable);
+    Page<NotificationEntity> findByRelatedEntityIdAndRelatedEntityType(String relatedEntityId, String relatedEntityType, Pageable pageable);
+    Page<NotificationEntity> findByScheduledForBeforeAndReadFalse(Date scheduledFor, Pageable pageable);
 
-    // 3. Tìm thông báo theo loại (type)
-    Page<NotificationEntity> findByType(String type, Pageable pageable);
-
-    // 4. Tìm thông báo chưa đọc (isRead = false)
-    Page<NotificationEntity> findByIsReadFalse(Pageable pageable);
-
-    // 5. Tìm thông báo theo loại và trạng thái đã đọc
-    Page<NotificationEntity> findByTypeAndIsRead(NotificationType type, boolean isRead, Pageable pageable);
-
-    Page<NotificationEntity> findByUserIdAndIsRead(String userId, boolean isRead, Pageable pageable);
-
-    // 6. Kiểm tra xem thông báo có tồn tại không
-    boolean existsById(String id);
-
-    // 7. Xóa thông báo theo ID
-    void deleteById(String id);
+    void deleteByCreatedAtBefore(Date createdAt);
+    Page<NotificationEntity> findByUserIdAndRequiresActionTrueAndReadFalse(String userId, Pageable pageable);
 }

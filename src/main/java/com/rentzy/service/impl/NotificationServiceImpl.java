@@ -2,7 +2,7 @@ package com.rentzy.service.impl;
 
 import com.rentzy.converter.NotificationConverter;
 import com.rentzy.exception.ResourceNotFoundException;
-import com.rentzy.model.dto.NotificationDTO;
+import com.rentzy.model.dto.request.NotificationRequestDTO;
 import com.rentzy.entity.NotificationEntity;
 import com.rentzy.repository.NotificationRepository;
 import com.rentzy.service.NotificationService;
@@ -29,8 +29,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
-    public Page<NotificationDTO> getAllNotifications(Pageable pageable) {
-        return notificationRepository.findAll(pageable).map(notificationConverter::toDTO);
+    public Page<NotificationRequestDTO> getAllNotifications(Pageable pageable) {
+        return null;
     }
 
     @Override
@@ -57,15 +57,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationDTO> getNotificationsByUserId(String userId, Pageable pageable) {
-        return notificationRepository.findByUserId(userId, pageable)
-                .map(notificationConverter::toDTO);
+    public Page<NotificationRequestDTO> getNotificationsByUserId(String userId, Pageable pageable) {
+        return null;
     }
 
     @Override
-    public Page<NotificationDTO> getUnreadNotificationsByUserId(String userId , Pageable pageable) {
-        return notificationRepository.findByUserIdAndIsRead(userId, false, pageable)
-                .map(notificationConverter::toDTO);
+    public Page<NotificationRequestDTO> getUnreadNotificationsByUserId(String userId , Pageable pageable) {
+        return null;
     }
 
     @Override
@@ -83,13 +81,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void markAllNotificationsAsRead(String userId) {
-        List<NotificationEntity> notifications = notificationRepository.findByUserId(userId);
 
-        if (notifications.isEmpty()) {
-            throw new ResourceNotFoundException("No notifications found for the given IDs.");
-        }
-        // Đánh dấu tất cả là đã đọc
-        notifications.forEach(notification -> notification.setRead(true));
-        notificationRepository.saveAll(notifications);
+
     }
 }

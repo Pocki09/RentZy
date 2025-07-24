@@ -1,11 +1,12 @@
 package com.rentzy.converter;
 
-import com.rentzy.model.dto.NotificationDTO;
 import com.rentzy.entity.NotificationEntity;
+import com.rentzy.model.dto.request.NotificationRequestDTO;
+import com.rentzy.model.dto.response.NotificationResponseDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface NotificationConverter {
-    NotificationDTO toDTO(NotificationEntity notification);
-    NotificationEntity toEntity(NotificationDTO dto);
+    NotificationResponseDTO toDTO(NotificationEntity notification);
+    NotificationEntity toEntity(NotificationRequestDTO dto);
 }
