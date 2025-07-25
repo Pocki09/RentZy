@@ -1,17 +1,36 @@
 package com.rentzy.service;
 
+import com.rentzy.entity.AppointmentEntity;
+import com.rentzy.enums.notification.NotificationRecipient;
+import com.rentzy.enums.notification.NotificationType;
 import com.rentzy.model.dto.request.NotificationRequestDTO;
+import com.rentzy.model.dto.request.UserNotificationSettingsRequestDTO;
+import com.rentzy.model.dto.response.NotificationResponseDTO;
+import com.rentzy.model.dto.response.UserNotificationSettingsResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface NotificationService {
-    Page<NotificationRequestDTO> getAllNotifications(Pageable pageable);
-    void deleteNotification(String id);
-    void deleteNotifications(List<String> ids);
-    Page<NotificationRequestDTO> getNotificationsByUserId(String userId, Pageable pageable);
-    Page<NotificationRequestDTO> getUnreadNotificationsByUserId(String userId, Pageable pageable);
-    void markNotificationsAsRead(List<String> ids);
-    void markAllNotificationsAsRead(String userId);
+
+    void sendAppointmentNotification(AppointmentEntity appointment, NotificationType type);
+    void sendAppointmentReminder(AppointmentEntity appointment);
+
+    void sendEmailNotification(NotificationRecipient recipient, String subject, String content);
+    void sendSMSNotification(String phongNumber, String content);
+    void sendPushNotification(String userId, String title, String message);
+
+    NotificationResponseDTO createNotification(NotificationRequestDTO notificationRequestDTO);
+    Page<NotificationResponseDTO> getUserNotifications(String userId, Pageable pageable);
+
+    void markAsRead(String notificationId);
+    void markAllAsRead(String userId);
+    void bulkMarkAsRead(List<String> notificationIds);
+
+    void deleteNotification(String notificationId);
+    void deleteOldNotifications(int daysOld);
+
+    UserNotificationSettingsResponseDTO getUserNotificationSettings(String userId);
+    void updateUserSettings(String userId, UserNotificationSettingsRequestDTO request);
 }
