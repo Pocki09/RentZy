@@ -16,6 +16,7 @@ import java.util.List;
 public class PostEntity {
     @Id
     private String id;
+    private String propertyName;
     private String title;
     private String description;
     private double price;

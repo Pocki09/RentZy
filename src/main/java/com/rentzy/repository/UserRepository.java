@@ -14,6 +14,7 @@ public interface UserRepository extends MongoRepository<UserEntity, String> {
     Page<UserEntity> findAll(Pageable pageable);
     Page<UserEntity> findByRole(UserRole role, Pageable pageable);
     Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findById(String userId);
     Optional<UserEntity> findByEmail(String email);
     Optional<UserEntity> findByFullNameIgnoreCase(String fullName);
     Optional<UserEntity> findByPhone(String phone);
