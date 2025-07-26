@@ -33,4 +33,7 @@ public interface NotificationService {
 
     UserNotificationSettingsResponseDTO getUserNotificationSettings(String userId);
     void updateUserSettings(String userId, UserNotificationSettingsRequestDTO request);
+
+    void processScheduledNotifications();
+    void retryFailedDeliveries();
 }

@@ -1,7 +1,10 @@
 package com.rentzy.enums.notification;
 
 public enum NotificationType {
-    APPOINTMENT,
-    REVIEW,
-    SYSTEM
+    APPOINTMENT_CREATED,
+    APPOINTMENT_CONFIRMED,
+    APPOINTMENT_REJECTED,
+    APPOINTMENT_CANCELLED,
+    APPOINTMENT_RESCHEDULED,
+    APPOINTMENT_COMPLETED
 }
