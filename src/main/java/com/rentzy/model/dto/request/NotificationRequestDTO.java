@@ -3,6 +3,7 @@ package com.rentzy.model.dto.request;
 import com.rentzy.enums.notification.NotificationPriority;
 import com.rentzy.enums.notification.NotificationType;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 
@@ -10,6 +11,7 @@ import java.time.Instant;
 import java.util.Map;
 
 @Data
+@Builder
 public class NotificationRequestDTO {
     @NotBlank(message = "User ID is required")
     private String userId;

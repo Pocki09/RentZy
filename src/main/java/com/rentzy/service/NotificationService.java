@@ -1,6 +1,7 @@
 package com.rentzy.service;
 
 import com.rentzy.entity.AppointmentEntity;
+import com.rentzy.entity.NotificationEntity;
 import com.rentzy.enums.notification.NotificationRecipient;
 import com.rentzy.enums.notification.NotificationType;
 import com.rentzy.model.dto.request.NotificationRequestDTO;
@@ -21,7 +22,7 @@ public interface NotificationService {
     void sendSMSNotification(String phongNumber, String content);
     void sendPushNotification(String userId, String title, String message);
 
-    NotificationResponseDTO createNotification(NotificationRequestDTO notificationRequestDTO);
+    NotificationEntity createNotification(NotificationRequestDTO notificationRequestDTO);
     Page<NotificationResponseDTO> getUserNotifications(String userId, Pageable pageable);
 
     void markAsRead(String notificationId);
