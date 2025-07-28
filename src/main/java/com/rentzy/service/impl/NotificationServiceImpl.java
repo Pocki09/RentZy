@@ -1,12 +1,9 @@
 package com.rentzy.service.impl;
 
 import com.rentzy.converter.NotificationConverter;
-import com.rentzy.entity.AppointmentEntity;
-import com.rentzy.entity.NotificationEntity;
-import com.rentzy.entity.PostEntity;
-import com.rentzy.entity.UserEntity;
+import com.rentzy.entity.*;
+import com.rentzy.enums.notification.NotificationChanel;
 import com.rentzy.enums.notification.NotificationPriority;
-import com.rentzy.enums.notification.NotificationRecipient;
 import com.rentzy.enums.notification.NotificationType;
 import com.rentzy.model.dto.request.NotificationRequestDTO;
 import com.rentzy.model.dto.request.UserNotificationSettingsRequestDTO;
@@ -15,9 +12,12 @@ import com.rentzy.model.dto.response.UserNotificationSettingsResponseDTO;
 import com.rentzy.repository.*;
 import com.rentzy.service.NotificationService;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -27,6 +27,7 @@ import java.util.Map;
 
 @NoArgsConstructor
 @Service
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     private NotificationRepository notificationRepository;
@@ -55,8 +56,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendEmailNotification(NotificationRecipient recipient, String subject, String content) {
+    @Async
+    public void sendEmailNotification(String recipientEmail, String subject, String content) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(recipientEmail);
+            message.setSubject(subject);
+            message.setText(content);
+            message.setFrom("hanhatminh12a13@gmail.com");
 
+            javaMailSender.send(message);
+            log.info("Email sent successfully to: {}", recipientEmail);
+        }
+        catch (Exception e){
+            log.error("Failed to send email to {}: {}", recipientEmail, e.getMessage());
+        }
     }
 
     @Override
@@ -147,7 +161,67 @@ public class NotificationServiceImpl implements NotificationService {
                 .build();
 
         NotificationEntity notification = createNotification(notificationRequestDTO);
-        //deliverNotification
+        deliverNotification(notification);
+    }
+
+    private void deliverNotification(NotificationEntity notificationEntity){
+        UserNotificationSettingsEntity settings =
+                userNotificationSettingsRepository.findByUserId(notificationEntity.getUserId())
+                        .orElse(createDefaultSettings(notificationEntity.getUserId()));
+
+        if (settings.isInAppEnabled()){
+            log.info("In-app notification delivered for user: {}", notificationEntity.getUserId());
+        }
+
+        if (settings.isEmailEnabled()){
+            UserEntity user = userRepository.findById(notificationEntity.getUserId()).
+                    orElseThrow(() -> new RuntimeException("User not found"));
+            String email = user.getEmail();
+            if (email != null){
+                createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.EMAIL, email);
+                sendEmailNotification(email, notificationEntity.getTitle(), notificationEntity.getMessage());
+            }
+        }
+
+        if (settings.isPushEnabled()) {
+            createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.PUSH, notificationEntity.getUserId());
+            sendPushNotification(notificationEntity.getUserId(), notificationEntity.getTitle(), notificationEntity.getMessage());
+        }
+
+        if (settings.isSmsEnabled()) {
+            UserEntity user = userRepository.findById(notificationEntity.getUserId()).
+                    orElseThrow(() -> new RuntimeException("User not found"));
+            String phone = user.getPhone();
+            if (phone != null){
+                createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.SMS, phone);
+                sendSMSNotification(phone, notificationEntity.getMessage());
+            }
+        }
+    }
+
+    private void createDeliveryRecord(String notificationId, String userId, NotificationChanel chanel, String recipient){
+        NotificationDeliveryEntity notificationDeliveryEntity = new NotificationDeliveryEntity();
+        notificationDeliveryEntity.setNotificationId(notificationId);
+        notificationDeliveryEntity.setUserId(userId);
+        notificationDeliveryEntity.setChanel(chanel);
+        notificationDeliveryEntity.setRecipient(recipient);
+
+        notificationDeliveryRepository.save(notificationDeliveryEntity);
+    }
+
+    private UserNotificationSettingsEntity createDefaultSettings(String userId) {
+        UserNotificationSettingsEntity settings = new UserNotificationSettingsEntity();
+        settings.setUserId(userId);
+
+        Map<String, Boolean> typePreferences = new HashMap<>();
+        typePreferences.put("APPOINTMENT_CREATED", true);
+        typePreferences.put("APPOINTMENT_CONFIRMED", true);
+        typePreferences.put("APPOINTMENT_REJECTED", true);
+        typePreferences.put("APPOINTMENT_CANCELLED", true);
+        typePreferences.put("APPOINTMENT_REMINDER", true);
+        settings.setTypePreferences(typePreferences);
+
+        return userNotificationSettingsRepository.save(settings);
     }
 
     private Map<String, Object> buildAppointmentData(AppointmentEntity appointment) {

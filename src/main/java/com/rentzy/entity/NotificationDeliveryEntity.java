@@ -1,7 +1,6 @@
 package com.rentzy.entity;
 
 import com.rentzy.enums.notification.NotificationChanel;
-import com.rentzy.enums.notification.NotificationRecipient;
 import com.rentzy.enums.notification.NotificationStatus;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -20,7 +19,7 @@ public class NotificationDeliveryEntity {
 
     private NotificationStatus status; //PENDING,...
     private NotificationChanel chanel; // EMAIL, SMS,... gửi
-    private NotificationRecipient recipient; //EMAIL, PHONE,.. nhận
+    private String recipient; //EMAIL, PHONE,.. nhận
 
     private String errorMessage;
 

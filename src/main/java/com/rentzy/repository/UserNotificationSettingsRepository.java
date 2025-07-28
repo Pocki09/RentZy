@@ -8,9 +8,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserNotificationSettingsRepository extends MongoRepository<UserNotificationSettingsEntity, String> {
-    Page<UserNotificationSettingsEntity> findByUserId(String userId, Pageable pageable);
+    Optional<UserNotificationSettingsEntity> findByUserId(String userId);
 
     @Query("{'emailEnabled': true, 'typePreferences.?0': true}")
     Page<UserNotificationSettingsEntity> findUsersWithEmailEnabledForType(NotificationType type, Pageable pageable);

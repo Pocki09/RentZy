@@ -2,7 +2,6 @@ package com.rentzy.service;
 
 import com.rentzy.entity.AppointmentEntity;
 import com.rentzy.entity.NotificationEntity;
-import com.rentzy.enums.notification.NotificationRecipient;
 import com.rentzy.enums.notification.NotificationType;
 import com.rentzy.model.dto.request.NotificationRequestDTO;
 import com.rentzy.model.dto.request.UserNotificationSettingsRequestDTO;
@@ -18,7 +17,7 @@ public interface NotificationService {
     void sendAppointmentNotification(AppointmentEntity appointment, NotificationType type);
     void sendAppointmentReminder(AppointmentEntity appointment);
 
-    void sendEmailNotification(NotificationRecipient recipient, String subject, String content);
+    void sendEmailNotification(String recipient, String subject, String content);
     void sendSMSNotification(String phongNumber, String content);
     void sendPushNotification(String userId, String title, String message);
 
