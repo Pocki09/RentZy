@@ -46,6 +46,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         switch (type){
             case APPOINTMENT_CREATED:
+                AppointmentCreatedNotification(appointment, appointmentData);
 
         }
     }
