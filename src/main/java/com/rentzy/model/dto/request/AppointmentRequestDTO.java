@@ -24,4 +24,6 @@ public class AppointmentRequestDTO {
     private Integer durationMinutes;
 
     private String contactPhone;
+
+    private String cancelledBy;
 }

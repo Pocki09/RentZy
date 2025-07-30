@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Service
@@ -47,6 +48,15 @@ public class NotificationServiceImpl implements NotificationService {
         switch (type){
             case APPOINTMENT_CREATED:
                 AppointmentCreatedNotification(appointment, appointmentData);
+                notifyOwnerNewRequest(appointment, appointmentData);
+                break;
+            case APPOINTMENT_CONFIRMED:
+                AppointmentConfirmedNotification(appointment, appointmentData);
+                break;
+            case APPOINTMENT_REJECTED:
+                AppointmentRejectNotification(appointment, appointmentData);
+                break;
+            case APPOINTMENT_CANCELLED:
 
         }
     }
@@ -165,6 +175,88 @@ public class NotificationServiceImpl implements NotificationService {
         deliverNotification(notification);
     }
 
+    private void notifyOwnerNewRequest(AppointmentEntity appointment, Map<String, Object> data) {
+        NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                .userId(appointment.getOwnerId())
+                .title("Yêu cầu lịch hẹn mới")
+                .message(String.format("%s muốn xem '%s' vào %s", data.get("guestName"), data.get("propertyName"), data.get("appointmentTime")))
+                .type(NotificationType.APPOINTMENT_CREATED)
+                .priority(NotificationPriority.HIGH)
+                .relatedEntityId(appointment.getId())
+                .relatedEntityType("appointment")
+                .metadata(data)
+                .requiresAction(true)
+                .build();
+
+        NotificationEntity notification = createNotification(notificationRequestDTO);
+        deliverNotification(notification);
+    }
+
+    private void AppointmentConfirmedNotification(AppointmentEntity appointment, Map<String, Object> data) {
+        NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                .userId(appointment.getUserId())
+                .title("Lịch hẹn đã được xác nhận")
+                .message(String.format("Chủ nhà đã xác nhận lịch hẹn xem '%s' vào %s",
+                        data.get("propertyName"), data.get("appointmentTime")))
+                .type(NotificationType.APPOINTMENT_CONFIRMED)
+                .priority(NotificationPriority.HIGH)
+                .relatedEntityId(appointment.getId())
+                .relatedEntityType("appointment")
+                .metadata(data)
+                .build();
+        NotificationEntity notification = createNotification(notificationRequestDTO);
+        deliverNotification(notification);
+    }
+
+    private void AppointmentRejectNotification(AppointmentEntity appointment, Map<String, Object> data) {
+        String reason = Objects.toString(data.get("rejectionReason"), "Không có lý do cụ thể");
+        NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                .userId(appointment.getUserId())
+                .title("Lịch hẹn đã bị từ chối")
+                .message(String.format("Chủ nhà đã từ chối lịch hẹn xem '%s'. Lý do: %s",
+                        data.get("propertyName"), reason))
+                .type(NotificationType.APPOINTMENT_REJECTED)
+                .priority(NotificationPriority.HIGH)
+                .relatedEntityId(appointment.getId())
+                .relatedEntityType("appointment")
+                .metadata(data)
+                .build();
+        NotificationEntity notification = createNotification(notificationRequestDTO);
+        deliverNotification(notification);
+    }
+
+    private void AppointmentCancelledNotification(AppointmentEntity appointment, Map<String, Object> data) {
+
+        String reason = Objects.toString(data.get("cancellationReason"), "Không có lý do cụ thể");
+        String cancelledBy = Objects.toString(data.getOrDefault("cancelledBy", "Hệ thống"));
+
+        String[] userIds = {appointment.getUserId(), appointment.getOwnerId()};
+        for (String userId : userIds){
+            String message;
+            if (userId.equals(appointment.getUserId())) {
+                message = String.format("Lịch hẹn xem '%s' vào %s đã bị hủy bởi %s. Lý do: %s",
+                        data.get("propertyName"), data.get("appointmentTime"), cancelledBy, reason);
+            }
+            else {
+                message = String.format("Lịch hẹn của %s xem '%s' vào %s đã bị hủy. Lý do: %s",
+                        data.get("guestName"), data.get("propertyName"), data.get("appointmentTime"), reason);
+            }
+
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .userId(appointment.getUserId())
+                    .title("Lịch hẹn đã bị hủy")
+                    .message(message)
+                    .type(NotificationType.APPOINTMENT_CANCELLED)
+                    .priority(NotificationPriority.HIGH)
+                    .relatedEntityId(appointment.getId())
+                    .relatedEntityType("appointment")
+                    .metadata(data)
+                    .build();
+            NotificationEntity notification = createNotification(notificationRequestDTO);
+            deliverNotification(notification);
+        }
+    }
+
     private void deliverNotification(NotificationEntity notificationEntity){
         UserNotificationSettingsEntity settings =
                 userNotificationSettingsRepository.findByUserId(notificationEntity.getUserId())
@@ -244,6 +336,9 @@ public class NotificationServiceImpl implements NotificationService {
         data.put("ownerName", owner.getFullName());
         data.put("guestName", guest.getFullName());
         data.put("propertyName", post.getPropertyName());
+        data.put("rejectionReason", appointment.getRejectionReason());
+        data.put("cancellationReason", appointment.getCancellationReason());
+        data.put("cancelledBy", appointment.getCancelledBy());
         return data;
     }
 }

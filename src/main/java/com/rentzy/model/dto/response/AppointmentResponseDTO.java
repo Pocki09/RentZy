@@ -12,6 +12,8 @@ public class AppointmentResponseDTO {
 
     private String userId;
 
+    private String cancelledBy;
+
     private Date appointmentDate;
 
     private AppointmentStatus status;
