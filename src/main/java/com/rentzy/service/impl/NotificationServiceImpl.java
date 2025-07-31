@@ -14,6 +14,7 @@ import com.rentzy.service.NotificationService;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,10 +22,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Service
@@ -43,27 +42,63 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendAppointmentNotification(AppointmentEntity appointment, NotificationType type) {
-        Map<String, Object> appointmentData = buildAppointmentData(appointment);
 
-        switch (type){
-            case APPOINTMENT_CREATED:
-                AppointmentCreatedNotification(appointment, appointmentData);
-                notifyOwnerNewRequest(appointment, appointmentData);
-                break;
-            case APPOINTMENT_CONFIRMED:
-                AppointmentConfirmedNotification(appointment, appointmentData);
-                break;
-            case APPOINTMENT_REJECTED:
-                AppointmentRejectNotification(appointment, appointmentData);
-                break;
-            case APPOINTMENT_CANCELLED:
+        try {
+            Map<String, Object> appointmentData = buildAppointmentData(appointment);
 
+            switch (type){
+                case APPOINTMENT_CREATED:
+                    AppointmentCreatedNotification(appointment, appointmentData);
+                    notifyOwnerNewRequest(appointment, appointmentData);
+                    break;
+                case APPOINTMENT_CONFIRMED:
+                    AppointmentConfirmedNotification(appointment, appointmentData);
+                    break;
+                case APPOINTMENT_REJECTED:
+                    AppointmentRejectNotification(appointment, appointmentData);
+                    break;
+                case APPOINTMENT_CANCELLED:
+                    AppointmentCancelledNotification(appointment, appointmentData);
+                    break;
+                case APPOINTMENT_RESCHEDULED:
+                    AppointmentRescheduledNotification(appointment, appointmentData);
+                    break;
+                case APPOINTMENT_COMPLETED:
+                    AppointmentCompletedNotification(appointment, appointmentData);
+                    break;
+                default:
+                    log.warn("Unknown notification type: {}", type);
+            }
+        }
+        catch (Exception e) {
+            log.error("Failed to send appointment notification: {}", e.getMessage(), e);
         }
     }
 
     @Override
     public void sendAppointmentReminder(AppointmentEntity appointment) {
+        try {
+            Map<String, Object> appointmentData = buildAppointmentData(appointment);
 
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .userId(appointment.getUserId())
+                    .title("Nhắc nhở lịch hẹn")
+                    .message(String.format("Bạn có lịch hẹn vào %s (còn 1 giờ nữa)",
+                            appointmentData.get("appointmentTime")))
+                    .type(NotificationType.APPOINTMENT_REMINDER)
+                    .priority(NotificationPriority.HIGH)
+                    .relatedEntityId(appointment.getId())
+                    .relatedEntityType("appointment")
+                    .metadata(appointmentData)
+                    .requiresAction(true)
+                    .build();
+
+            NotificationEntity notification = createNotification(notificationRequestDTO);
+            deliverNotification(notification);
+        }
+        catch (Exception e) {
+            log.error("Failed to send appointment reminder: {}", e.getMessage(), e);
+        }
     }
 
     @Override
@@ -110,8 +145,26 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationResponseDTO> getUserNotifications(String userId, Pageable pageable) {
-        return null;
+    public Page<NotificationResponseDTO> getUserNotifications(String userId, NotificationRequestDTO request) {
+        List<NotificationEntity> notificationEntities = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        if (request.getType() != null){
+            notificationEntities = notificationEntities.stream()
+                    .filter(n -> n.getType().equals(request.getType()))
+                    .collect(Collectors.toList());
+        }
+
+        if (request.getIsRead() != null){
+            notificationEntities = notificationEntities.stream()
+                    .filter(n -> n.isRead() == request.getIsRead())
+                    .collect(Collectors.toList());
+        }
+
+        List<NotificationResponseDTO> notificationResponseDTOS = notificationEntities.stream()
+                .map(notificationConverter::toDTO)
+                .toList();
+
+        return new PageImpl<>(notificationResponseDTOS);
     }
 
     @Override
@@ -243,11 +296,67 @@ public class NotificationServiceImpl implements NotificationService {
             }
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
-                    .userId(appointment.getUserId())
+                    .userId(userId)
                     .title("Lịch hẹn đã bị hủy")
                     .message(message)
                     .type(NotificationType.APPOINTMENT_CANCELLED)
                     .priority(NotificationPriority.HIGH)
+                    .relatedEntityId(appointment.getId())
+                    .relatedEntityType("appointment")
+                    .metadata(data)
+                    .build();
+            NotificationEntity notification = createNotification(notificationRequestDTO);
+            deliverNotification(notification);
+        }
+    }
+
+    private void AppointmentRescheduledNotification(AppointmentEntity appointment, Map<String, Object> data) {
+        String[] userIds = {appointment.getUserId(), appointment.getOwnerId()};
+        for (String userId : userIds){
+            String message;
+            if (userId.equals(appointment.getUserId())) {
+                message = String.format("Lịch hẹn xem '%s' đã được dời đến %s",
+                        data.get("propertyName"), data.get("appointmentTime"));
+            }
+            else {
+                message = String.format("Lịch hẹn của %s xem '%s' đã được dời đến %s",
+                        data.get("guestName"), data.get("propertyName"), data.get("appointmentTime"));
+            }
+
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .userId(userId)
+                    .title("Thông báo dời lịch hẹn")
+                    .message(message)
+                    .type(NotificationType.APPOINTMENT_RESCHEDULED)
+                    .priority(NotificationPriority.HIGH)
+                    .relatedEntityId(appointment.getId())
+                    .relatedEntityType("appointment")
+                    .metadata(data)
+                    .build();
+            NotificationEntity notification = createNotification(notificationRequestDTO);
+            deliverNotification(notification);
+        }
+    }
+
+    private void AppointmentCompletedNotification(AppointmentEntity appointment, Map<String, Object> data) {
+        String[] userIds = {appointment.getUserId(), appointment.getOwnerId()};
+        String message;
+        for (String userId : userIds){
+            if (userId.equals(appointment.getUserId())) {
+                message = String.format("Bạn đã hoàn thành việc xem '%s'. Hãy để lại đánh giá của bạn!",
+                        data.get("propertyName"));
+            }
+            else {
+                message = String.format("Lịch hẹn với %s xem '%s' đã hoàn thành thành công",
+                        data.get("guestName"), data.get("propertyName"));
+            }
+
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .userId(userId)
+                    .title("Lịch hẹn đã hoàn thành")
+                    .message(message)
+                    .type(NotificationType.APPOINTMENT_COMPLETED)
+                    .priority(NotificationPriority.MEDIUM)
                     .relatedEntityId(appointment.getId())
                     .relatedEntityType("appointment")
                     .metadata(data)

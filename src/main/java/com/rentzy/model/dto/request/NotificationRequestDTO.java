@@ -31,4 +31,5 @@ public class NotificationRequestDTO {
     private Map<String, Object> metadata;
 
     private Boolean requiresAction;
+    private Boolean isRead;
 }

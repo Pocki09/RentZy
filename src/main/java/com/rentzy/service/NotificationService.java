@@ -22,7 +22,7 @@ public interface NotificationService {
     void sendPushNotification(String userId, String title, String message);
 
     NotificationEntity createNotification(NotificationRequestDTO notificationRequestDTO);
-    Page<NotificationResponseDTO> getUserNotifications(String userId, Pageable pageable);
+    Page<NotificationResponseDTO> getUserNotifications(String userId, NotificationRequestDTO request);
 
     void markAsRead(String notificationId);
     void markAllAsRead(String userId);
