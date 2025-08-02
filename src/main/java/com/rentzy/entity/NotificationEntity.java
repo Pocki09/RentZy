@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
@@ -31,6 +32,6 @@ public class NotificationEntity {
     private boolean requiresAction;
 
     private Date createdAt;
-    private Date readAt;
+    private LocalDateTime readAt;
     private Date scheduledFor;
 }

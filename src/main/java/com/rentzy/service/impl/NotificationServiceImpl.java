@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -169,17 +170,36 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void markAsRead(String notificationId) {
+        NotificationEntity notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
 
+        notification.setRead(true);
+        notification.setReadAt(LocalDateTime.now());
+        notificationRepository.save(notification);
     }
 
     @Override
     public void markAllAsRead(String userId) {
+        List<NotificationEntity> unReadNotifications = notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
 
+        unReadNotifications.forEach(notification -> {
+            notification.setRead(true);
+            notification.setReadAt(LocalDateTime.now());
+        });
+
+        notificationRepository.saveAll(unReadNotifications);
     }
 
     @Override
     public void bulkMarkAsRead(List<String> notificationIds) {
+        List<NotificationEntity> notificationEntities = notificationRepository.findAllById(notificationIds);
 
+        notificationEntities.forEach(notification -> {
+            notification.setRead(true);
+            notification.setReadAt(LocalDateTime.now());
+        });
+
+        notificationRepository.saveAll(notificationEntities);
     }
 
     @Override
