@@ -22,7 +22,7 @@ public interface NotificationService {
     void sendPushNotification(String userId, String title, String message);
 
     NotificationEntity createNotification(NotificationRequestDTO notificationRequestDTO);
-    Page<NotificationResponseDTO> getUserNotifications(String userId, NotificationRequestDTO request);
+    Page<NotificationResponseDTO> getUserNotifications(NotificationRequestDTO request);
 
     void markAsRead(String notificationId);
     void markAllAsRead(String userId);
@@ -31,8 +31,8 @@ public interface NotificationService {
     void deleteNotification(String notificationId);
     void deleteOldNotifications(int daysOld);
 
-    UserNotificationSettingsResponseDTO getUserNotificationSettings(String userId);
-    void updateUserSettings(String userId, UserNotificationSettingsRequestDTO request);
+    UserNotificationSettingsResponseDTO getUserNotificationSettings(UserNotificationSettingsRequestDTO request);
+    void updateUserSettings(UserNotificationSettingsRequestDTO request);
 
     void processScheduledNotifications();
     void retryFailedDeliveries();

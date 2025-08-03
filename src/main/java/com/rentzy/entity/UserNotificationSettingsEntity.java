@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
@@ -27,5 +28,5 @@ public class UserNotificationSettingsEntity {
     private int quietHoursEnd = 7;
 
     private Date createdAt;
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

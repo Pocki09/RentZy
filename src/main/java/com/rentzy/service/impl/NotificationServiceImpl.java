@@ -1,6 +1,7 @@
 package com.rentzy.service.impl;
 
 import com.rentzy.converter.NotificationConverter;
+import com.rentzy.converter.UserNotificationSettingsConverter;
 import com.rentzy.entity.*;
 import com.rentzy.enums.notification.NotificationChanel;
 import com.rentzy.enums.notification.NotificationPriority;
@@ -15,7 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -35,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
     private NotificationDeliveryRepository notificationDeliveryRepository;
     private UserNotificationSettingsRepository userNotificationSettingsRepository;
     private NotificationConverter notificationConverter;
+    private UserNotificationSettingsConverter userNotificationSettingsConverter;
     private JavaMailSender javaMailSender;
     private UserRepository userRepository;
     private PostRepository postRepository;
@@ -146,8 +147,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationResponseDTO> getUserNotifications(String userId, NotificationRequestDTO request) {
-        List<NotificationEntity> notificationEntities = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public Page<NotificationResponseDTO> getUserNotifications(NotificationRequestDTO request) {
+        List<NotificationEntity> notificationEntities = notificationRepository.findByUserIdOrderByCreatedAtDesc(request.getUserId());
 
         if (request.getType() != null){
             notificationEntities = notificationEntities.stream()
@@ -203,6 +204,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public UserNotificationSettingsResponseDTO getUserNotificationSettings(UserNotificationSettingsRequestDTO request){
+        UserNotificationSettingsEntity userNotificationSettingsEntity = userNotificationSettingsRepository.findByUserId(request.getUserId())
+                .orElse(createDefaultSettings(request.getUserId()));
+
+        return userNotificationSettingsConverter.toDto(userNotificationSettingsEntity);
+    }
+
+    @Override
     public void deleteNotification(String notificationId) {
 
     }
@@ -213,18 +222,30 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public UserNotificationSettingsResponseDTO getUserNotificationSettings(String userId) {
-        return null;
-    }
+    public void updateUserSettings(UserNotificationSettingsRequestDTO dto) {
+        UserNotificationSettingsEntity settings = userNotificationSettingsRepository.findByUserId(dto.getUserId())
+                .orElse(new UserNotificationSettingsEntity());
 
-    @Override
-    public void updateUserSettings(String userId, UserNotificationSettingsRequestDTO request) {
+        settings.setUserId(dto.getUserId());
+        settings.setEmailEnabled(dto.isEmailEnabled());
+        settings.setSmsEnabled(dto.isSmsEnabled());
+        settings.setPushEnabled(dto.isPushEnabled());
+        settings.setInAppEnabled(dto.isInAppEnabled());
+        settings.setTypePreferences(dto.getTypePreferences());
+        settings.setTimezone(dto.getTimezone());
+        settings.setQuietHoursStart(dto.getQuietHoursStart());
+        settings.setQuietHoursEnd(dto.getQuietHoursEnd());
+        settings.setUpdatedAt(LocalDateTime.now());
 
+        userNotificationSettingsRepository.save(settings);
     }
 
     @Override
     public void processScheduledNotifications() {
+        List<NotificationEntity> scheduledNotifications =
+                notificationRepository.findByScheduledForBeforeAndReadFalse(new Date());
 
+        scheduledNotifications.forEach(this::deliverNotification);
     }
 
     @Override
