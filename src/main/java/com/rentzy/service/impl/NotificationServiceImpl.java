@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -111,7 +112,12 @@ public class NotificationServiceImpl implements NotificationService {
             message.setTo(recipientEmail);
             message.setSubject(subject);
             message.setText(content);
-            message.setFrom("hanhatminh12a13@gmail.com");
+
+            String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+            UserEntity userEntity = userRepository.findByUsername(userName)
+                    .orElseThrow(IllegalArgumentException::new);
+
+            message.setFrom(userEntity.getEmail());
 
             javaMailSender.send(message);
             log.info("Email sent successfully to: {}", recipientEmail);
