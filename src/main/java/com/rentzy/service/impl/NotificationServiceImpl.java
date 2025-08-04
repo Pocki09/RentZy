@@ -120,7 +120,7 @@ public class NotificationServiceImpl implements NotificationService {
             message.setFrom(userEntity.getEmail());
 
             javaMailSender.send(message);
-            log.info("Email sent successfully to: {}", recipientEmail);
+            log.info("Email sent successfully to: {}", recipientEmail); 
         }
         catch (Exception e){
             log.error("Failed to send email to {}: {}", recipientEmail, e.getMessage());
@@ -219,12 +219,58 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotification(String notificationId) {
+        try {
 
+            if (notificationId == null || notificationId.trim().isEmpty()){
+                throw new IllegalArgumentException("NotificationId cannot be null or empty");
+            }
+
+            NotificationEntity notification = notificationRepository.findById(notificationId).orElseThrow(
+                    () -> new RuntimeException("Notification not found")
+            );
+
+            notificationDeliveryRepository.deleteById(notificationId);
+            notificationRepository.delete(notification);
+
+            log.info("Notification {} deleted", notificationId);
+        }
+        catch (Exception e){
+            log.error("Failed to delete notification: {}", notificationId);
+            throw new RuntimeException("Failed to delete notification", e);
+        }
     }
 
     @Override
     public void deleteOldNotifications(int daysOld) {
+        try {
+            if (daysOld <= 0){
+                throw new IllegalArgumentException("DaysOld cannot be less than 0");
+            }
 
+            Date cutoffDate = new Date(System.currentTimeMillis() - (daysOld * 24L * 60 * 60 * 1000));
+            log.info("Deleting notifications older than {} days (before: {})", daysOld, cutoffDate);
+
+            List<NotificationEntity> oldNotifications = notificationRepository.findByCreatedAtBefore(cutoffDate);
+            if (oldNotifications.isEmpty()) {
+                log.info("No old notifications found to delete");
+                return;
+            }
+
+            List<String> notificationIds = oldNotifications.stream()
+                    .map(NotificationEntity::getId)
+                    .toList();
+
+            for (String notificationId : notificationIds) {
+                notificationDeliveryRepository.deleteById(notificationId);
+            }
+
+            notificationRepository.deleteAll(oldNotifications);
+
+            log.info("Successfully deleted {} old notifications (older than {} days)", oldNotifications.size(), daysOld);
+        }
+        catch (Exception e){
+            log.error("Failed to delete old notifications: {}", daysOld);
+        }
     }
 
     @Override
@@ -256,7 +302,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void retryFailedDeliveries() {
+        try {
 
+        }
+        catch (Exception e){
+            log.error("Failed to retry delivery failed: {}", e.getMessage());
+        }
     }
 
     private void AppointmentCreatedNotification(AppointmentEntity appointment, Map<String, Object> data){

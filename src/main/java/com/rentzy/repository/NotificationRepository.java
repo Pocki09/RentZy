@@ -27,4 +27,5 @@ public interface NotificationRepository extends MongoRepository<NotificationEnti
     Page<NotificationEntity> findByUserIdAndRequiresActionTrueAndReadFalse(String userId, Pageable pageable);
 
     List<NotificationEntity> findByScheduledForBeforeAndReadFalse(Date scheduledFor);
+    List<NotificationEntity> findByCreatedAtBefore(Date createdAt);
 }
