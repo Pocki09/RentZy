@@ -5,6 +5,7 @@ import com.rentzy.controller.auth.dto.request.AuthenticationRequest;
 import com.rentzy.controller.auth.dto.request.IntrospectRequest;
 import com.rentzy.controller.auth.dto.response.AuthenticationResponse;
 import com.rentzy.controller.auth.dto.response.IntrospectResponse;
+import com.rentzy.model.dto.request.logoutRequest;
 import com.rentzy.model.dto.response.ApiResponse;
 import com.rentzy.service.AuthenticationService;
 import lombok.AccessLevel;
@@ -38,6 +39,13 @@ public class AuthenticationController {
         var result = authenticationService.introspect(introspectRequest);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestBody logoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
                 .build();
     }
 }

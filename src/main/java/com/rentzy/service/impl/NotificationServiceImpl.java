@@ -43,6 +43,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
+    public static final String ACCOUNT_SID = System.getenv("ACCOUNT_SID");
+    public static final String AUTH_TOKEN = System.getenv("AUTH_TOKEN");
+
     @Override
     public void sendAppointmentNotification(AppointmentEntity appointment, NotificationType type) {
 
@@ -300,15 +303,6 @@ public class NotificationServiceImpl implements NotificationService {
         scheduledNotifications.forEach(this::deliverNotification);
     }
 
-    @Override
-    public void retryFailedDeliveries() {
-        try {
-
-        }
-        catch (Exception e){
-            log.error("Failed to retry delivery failed: {}", e.getMessage());
-        }
-    }
 
     private void AppointmentCreatedNotification(AppointmentEntity appointment, Map<String, Object> data){
         NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()

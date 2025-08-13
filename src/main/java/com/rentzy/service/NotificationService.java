@@ -35,5 +35,4 @@ public interface NotificationService {
     void updateUserSettings(UserNotificationSettingsRequestDTO request);
 
     void processScheduledNotifications();
-    void retryFailedDeliveries();
 }
