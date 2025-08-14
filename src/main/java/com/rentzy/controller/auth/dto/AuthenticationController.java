@@ -3,9 +3,10 @@ package com.rentzy.controller.auth.dto;
 import com.nimbusds.jose.JOSEException;
 import com.rentzy.controller.auth.dto.request.AuthenticationRequest;
 import com.rentzy.controller.auth.dto.request.IntrospectRequest;
+import com.rentzy.controller.auth.dto.request.RefreshRequest;
 import com.rentzy.controller.auth.dto.response.AuthenticationResponse;
 import com.rentzy.controller.auth.dto.response.IntrospectResponse;
-import com.rentzy.model.dto.request.logoutRequest;
+import com.rentzy.controller.auth.dto.request.logoutRequest;
 import com.rentzy.model.dto.response.ApiResponse;
 import com.rentzy.service.AuthenticationService;
 import lombok.AccessLevel;
@@ -38,6 +39,15 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         var result = authenticationService.introspect(introspectRequest);
         return ApiResponse.<IntrospectResponse>builder()
+                .result(result)
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<AuthenticationResponse> refresh(@RequestBody final RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
     }

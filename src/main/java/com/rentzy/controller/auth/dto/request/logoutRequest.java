@@ -1,4 +1,4 @@
-package com.rentzy.model.dto.request;
+package com.rentzy.controller.auth.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -7,12 +7,13 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.rentzy.controller.auth.dto.request.AuthenticationRequest;
 import com.rentzy.controller.auth.dto.request.IntrospectRequest;
+import com.rentzy.controller.auth.dto.request.RefreshRequest;
 import com.rentzy.controller.auth.dto.response.AuthenticationResponse;
 import com.rentzy.controller.auth.dto.response.IntrospectResponse;
 import com.rentzy.entity.InvalidatedToken;
 import com.rentzy.enums.UserRole;
 import com.rentzy.entity.UserEntity;
-import com.rentzy.model.dto.request.logoutRequest;
+import com.rentzy.controller.auth.dto.request.logoutRequest;
 import com.rentzy.repository.InvalidatedTokenRepository;
 import com.rentzy.repository.UserRepository;
 import lombok.AccessLevel;
@@ -26,6 +27,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -45,12 +47,20 @@ public class AuthenticationService {
     @Value("${jwt.secret}")
     protected String SIGNER_KEY;
 
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
+
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
-        var user = userRepository.findByUsername(authenticationRequest.getUsername()).orElseThrow(() -> new UsernameNotFoundException(authenticationRequest.getUsername()));
+        var user = userRepository.findById(authenticationRequest.getUserId()).orElseThrow(() -> new UsernameNotFoundException(authenticationRequest.getUserId()));
 
         boolean authenticated = passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword());
 
-        if (!authenticated) throw new UsernameNotFoundException(authenticationRequest.getUsername());
+        if (!authenticated) throw new UsernameNotFoundException(authenticationRequest.getUserId());
 
         var token  = generateToken(user);
 
@@ -66,7 +76,7 @@ public class AuthenticationService {
         boolean isValid = true;
 
         try {
-            verifyToken(token);
+            verifyToken(token, false);
         }
         catch (Exception e) {
             isValid = false;
@@ -78,7 +88,7 @@ public class AuthenticationService {
     }
 
     public void logout(logoutRequest request) throws ParseException, JOSEException {
-        var signedToken = verifyToken(request.getToken());
+        var signedToken = verifyToken(request.getToken(), true);
 
         String Jit = signedToken.getJWTClaimsSet().getJWTID();
         Date exprireTime = signedToken.getJWTClaimsSet().getExpirationTime();
@@ -90,39 +100,70 @@ public class AuthenticationService {
         invalidatedTokenRepository.save(invalidatedToken);
     }
 
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException{
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken  = new InvalidatedToken();
+        invalidatedToken.setId(jit);
+        invalidatedToken.setExpiryTime(expiryTime);
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var userId = signedJWT.getJWTClaimsSet().getSubject();
+
+        var user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(userId));
+
+        var token = generateToken(user);
+
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+    }
+
     String generateToken(UserEntity user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
+                .subject(user.getId())
                 .issuer("rentzy.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(2, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
                 ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
                 .build();
 
-        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-
-        JWSObject jwsObject = new JWSObject(header, payload);
+        SignedJWT signedJWT  = new SignedJWT(header, jwtClaimsSet);
 
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-            return jwsObject.serialize();
+            MACSigner signer = new MACSigner(SIGNER_KEY.getBytes(StandardCharsets.UTF_8));
+            signedJWT.sign(signer);
+            return signedJWT.serialize();
         } catch (JOSEException e) {
             log.error("Cannot create token", e);
             throw new RuntimeException(e);
         }
     }
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        if (!JWSAlgorithm.HS512.equals(signedJWT.getHeader().getAlgorithm())) {
+            throw new JOSEException("Unexpected JWS algorithm");
+        }
+
+        Date expiredTime = (isRefresh) ?
+        new Date(signedJWT
+                .getJWTClaimsSet()
+                .getIssueTime()
+                .toInstant()
+                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                .toEpochMilli())
+        : signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         var verified = signedJWT.verify(verifier);
 
