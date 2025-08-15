@@ -4,6 +4,7 @@ import com.rentzy.converter.AppointmentConverter;
 import com.rentzy.entity.AppointmentEntity;
 import com.rentzy.entity.PostEntity;
 import com.rentzy.enums.AppointmentStatus;
+import com.rentzy.enums.notification.NotificationType;
 import com.rentzy.model.dto.request.AppointmentRequestDTO;
 import com.rentzy.model.dto.response.AppointmentResponseDTO;
 import com.rentzy.repository.AppointmentRepository;
@@ -56,6 +57,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setReminderSent(false);
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_CREATED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
@@ -104,6 +107,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setUpdatedAt(new Date());
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_CONFIRMED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
@@ -127,6 +132,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setUpdatedAt(new Date());
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_CANCELLED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
@@ -150,6 +157,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setUpdatedAt(new Date());
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_REJECTED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
@@ -173,6 +182,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setUpdatedAt(new Date());
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_COMPLETED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
@@ -202,15 +213,33 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentEntity.setUpdatedAt(new Date());
 
         AppointmentEntity savedEntity = appointmentRepository.save(appointmentEntity);
+
+        notificationService.sendAppointmentNotification(savedEntity, NotificationType.APPOINTMENT_RESCHEDULED);
         return appointmentConverter.toDTO(savedEntity);
     }
 
     @Override
-    public void sendAppointmentReminder(String appointmentId) {
+    public void sendAppointmentReminder() {
+        Date now = new Date();
+        Date tomorrow = new Date(now.getTime() + TimeUnit.HOURS.toMillis(24));
 
+        List<AppointmentEntity> upcomingAppointments = appointmentRepository.findUpcomingAppointments(now, tomorrow, AppointmentStatus.CONFIRMED);
+
+        for(AppointmentEntity appointment : upcomingAppointments){
+            if (!appointment.getReminderSent()){
+                long timeDiff = appointment.getAppointmentDate().getTime() - now.getTime();
+                if(timeDiff <= TimeUnit.HOURS.toMillis(2) && timeDiff > 0){
+                    notificationService.sendAppointmentReminder(appointment);
+
+                    appointment.setReminderSent(true);
+                    appointment.setUpdatedAt(now);
+                    appointmentRepository.save(appointment);
+                }
+            }
+        }
     }
 
-    void validateAppointmentTime(Date appointmentTime) {
+    private void validateAppointmentTime(Date appointmentTime) {
         Date now = new Date();
 
         if (appointmentTime.before(now)) {
@@ -236,7 +265,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
-    void validateNoConflict(AppointmentRequestDTO request) {
+    private void validateNoConflict(AppointmentRequestDTO request) {
         Date startTime = request.getAppointmentDate();
         Date endTime = new Date(startTime.getTime() + TimeUnit.MINUTES.toMillis(request.getDurationMinutes()));
 

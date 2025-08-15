@@ -89,7 +89,7 @@ public class NotificationServiceImpl implements NotificationService {
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .userId(appointment.getUserId())
                     .title("Nhắc nhở lịch hẹn")
-                    .message(String.format("Bạn có lịch hẹn vào %s (còn 1 giờ nữa)",
+                    .message(String.format("Bạn có lịch hẹn vào %s (còn 2 giờ nữa)",
                             appointmentData.get("appointmentTime")))
                     .type(NotificationType.APPOINTMENT_REMINDER)
                     .priority(NotificationPriority.HIGH)

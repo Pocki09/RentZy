@@ -44,4 +44,7 @@ public interface AppointmentRepository extends MongoRepository<AppointmentEntity
 
     @Query("{'postId':?0, 'date':?1, 'status':{$in:[?2,?3]}}")
     List<AppointmentEntity> findConflictingAppointments(String postId, Date date, AppointmentStatus confimed, AppointmentStatus pending);
+
+    @Query("{'appointmentDate': {$gte: ?0, $lte: ?1}, 'status': {$in: ?2}}")
+    List<AppointmentEntity> findUpcomingAppointments(Date now, Date tomorrow, AppointmentStatus confirmed);
 }

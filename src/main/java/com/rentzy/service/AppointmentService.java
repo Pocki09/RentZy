@@ -20,5 +20,5 @@ public interface AppointmentService {
     AppointmentResponseDTO rejectAppointment(String appointmentId, String ownerId, String reason);
     AppointmentResponseDTO completeAppointment(String appointmentId, String ownerId);
     AppointmentResponseDTO rescheduleAppointment(AppointmentRequestDTO request);
-    void sendAppointmentReminder(String appointmentId);
+    void sendAppointmentReminder();
 }
