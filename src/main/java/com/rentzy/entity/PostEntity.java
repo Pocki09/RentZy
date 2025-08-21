@@ -20,8 +20,6 @@ public class PostEntity {
     private String title;
     private String description;
     private double price;
-    private double area;
-    private String address;
     private List<String> images;
     private List<String> utilities;
     private String createdBy; // User ID
@@ -30,4 +28,8 @@ public class PostEntity {
     private Instant createdAt;
     @LastModifiedDate
     private Instant updatedAt;
+
+    private String ward;
+    private String district;
+    private String city;
 }
