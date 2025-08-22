@@ -32,4 +32,11 @@ public class PostEntity {
     private String ward;
     private String district;
     private String city;
+
+    private String nearUniversities;
+    private String transportInfo;
+    private String roomType;
+    private boolean includeBills;
+
+    private boolean securityCamera;
 }
