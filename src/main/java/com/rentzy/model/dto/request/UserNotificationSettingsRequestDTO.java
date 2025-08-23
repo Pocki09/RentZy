@@ -7,7 +7,6 @@ import java.util.Map;
 
 @Data
 public class UserNotificationSettingsRequestDTO {
-    private String id;
     private String userId;
     private boolean emailEnabled;
     private boolean smsEnabled;

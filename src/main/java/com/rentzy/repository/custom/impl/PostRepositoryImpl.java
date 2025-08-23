@@ -1,6 +1,6 @@
 package com.rentzy.repository.custom.impl;
 
-import com.rentzy.model.dto.PostSearchDTO;
+import com.rentzy.model.dto.request.PostRequestDTO;
 import com.rentzy.entity.PostEntity;
 import com.rentzy.repository.custom.CustomPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class PostRepositoryImpl implements CustomPostRepository {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public Page<PostEntity> findByFilters(PostSearchDTO criteria, Pageable pageable) {
+    public Page<PostEntity> findByFilters(PostRequestDTO criteria, Pageable pageable) {
         Query query = new Query();
         List<Criteria> criteriaList = new ArrayList<>();
 

@@ -1,17 +1,27 @@
 package com.rentzy.service;
 
-import com.rentzy.model.dto.PostDTO;
-import com.rentzy.model.dto.PostSearchDTO;
+import com.rentzy.entity.PostEntity;
+import com.rentzy.enums.PostStatus;
+import com.rentzy.model.dto.request.PostRequestDTO;
+import com.rentzy.model.dto.response.PostResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
 public interface PostService {
-    Page<PostDTO> getAllPosts(Pageable pageable);
-    Optional<PostDTO> getPostById(String id);
-    PostDTO createPost(PostDTO postDTO);
-    PostDTO updatePost(String id, PostDTO postDTO);
-    void deletePost(String id);
-    Page<PostDTO> searchPosts(PostSearchDTO criteria, Pageable pageable);
+    Page<PostEntity> searchPosts(PostRequestDTO criteria, Pageable pageable);
+    Page<PostEntity> getPostsByStatus(PostStatus status, Pageable pageable);
+    Page<PostEntity> getLatestPosts(Pageable pageable);
+    Page<PostEntity> getPostsByPriceRange(double minPrice, double maxPrice, Pageable pageable);
+    Page<PostEntity> getPostsByUser(String userId, Pageable pageable);
+    Page<PostEntity> getAllPostsByUser(String userId, Pageable pageable);
+    Optional<PostEntity> getPostById(String id);
+    PostResponseDTO createPost(PostEntity post, String userId);
+    PostResponseDTO updatePost(String id, PostEntity updatedPost, String userId);
+    void deletePost(String id, String userId);
+    PostResponseDTO approvePost(String id);
+    PostResponseDTO rejectPost(String id);
+    Page<PostEntity> getPendingPosts(Pageable pageable);
+    long countPostsByStatus(PostStatus status);
 }

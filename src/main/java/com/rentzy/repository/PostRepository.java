@@ -16,4 +16,8 @@ public interface PostRepository extends MongoRepository<PostEntity, String>, Cus
     Page<PostEntity> findByStatusAndCreatedBy(PostStatus status, String createdBy, Pageable pageable);
 
     Page<PostEntity> findByStatusOrderByCreatedAtDesc(PostStatus status, Pageable pageable);
+
+    Page<PostEntity> findByCreatedBy(String createdBy, Pageable pageable);
+
+    long countByStatus(PostStatus status);
 }

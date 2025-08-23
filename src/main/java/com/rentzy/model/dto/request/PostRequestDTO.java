@@ -1,17 +1,18 @@
-package com.rentzy.model.dto;
+package com.rentzy.model.dto.request;
 
 import com.rentzy.enums.PostStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.util.List;
 import java.util.Set;
 
 @Data
-public class PostDTO {
-    @NotNull
-    private String id;
+public class PostRequestDTO {
+    @NotBlank(message = "Property name is required")
+    private String propertyName;
 
     @NotBlank(message = "Title is required")
     private String title;
@@ -20,15 +21,16 @@ public class PostDTO {
     private String description;
 
     @NotNull(message = "Price is required")
-    private double price;
+    @Positive(message = "Price must be positive")
+    private Double price;  // Đổi từ minPrice/maxPrice
 
     @NotNull(message = "Area is required")
-    private double area;
+    @Positive(message = "Area must be positive")
+    private Double area;
 
     @NotBlank(message = "Address is required")
     private String address;
 
-    private List<String> images; // Danh sách hình ảnh (có thể là optional)
-    private Set<String> utilities; // Danh sách tiện ích (có thể là optional)
-    private PostStatus status; // Trạng thái bài đăng
+    private List<String> images;
+    private List<String> utilities;
 }

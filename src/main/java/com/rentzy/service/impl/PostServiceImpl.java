@@ -1,63 +1,100 @@
 package com.rentzy.service.impl;
 
 import com.rentzy.converter.PostConverter;
-import com.rentzy.exception.ResourceNotFoundException;
-import com.rentzy.model.dto.PostDTO;
-import com.rentzy.model.dto.PostSearchDTO;
 import com.rentzy.entity.PostEntity;
+import com.rentzy.enums.PostStatus;
+import com.rentzy.model.dto.request.PostRequestDTO;
+import com.rentzy.model.dto.response.PostResponseDTO;
 import com.rentzy.repository.PostRepository;
 import com.rentzy.service.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@NoArgsConstructor
+@Transactional(readOnly = true)
 public class PostServiceImpl implements PostService {
-    @Autowired
-    private PostRepository postRepository;
 
-    @Autowired
+    private PostRepository postRepository;
     private PostConverter postConverter;
 
     @Override
-    public Page<PostDTO> getAllPosts(Pageable pageable) {
-        return postRepository.findAll(pageable).map(postConverter::toDTO);
+    public Page<PostEntity> searchPosts(PostRequestDTO criteria, Pageable pageable) {
+        return postRepository.findByFilters(criteria, pageable);
     }
 
     @Override
-    public Optional<PostDTO> getPostById(String id) {
-        return postRepository.findById(id).map(postConverter::toDTO);
+    public Page<PostEntity> getPostsByStatus(PostStatus status, Pageable pageable) {
+        return postRepository.findByStatus(status, pageable);
     }
 
     @Override
-    public PostDTO createPost(PostDTO postDTO) {
-        PostEntity postEntity = postConverter.toEntity(postDTO);
-        PostEntity savedEntity = postRepository.save(postEntity);
-        return postConverter.toDTO(savedEntity);
+    public Page<PostEntity> getLatestPosts(Pageable pageable) {
+        return postRepository.findByStatusOrderByCreatedAtDesc(PostStatus.APPROVED, pageable);
     }
 
     @Override
-    public PostDTO updatePost(String id, PostDTO postDTO) {
-        PostEntity existingPost = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        postConverter.updateEntityFromDTO(postDTO, existingPost);
-        PostEntity savedEntity = postRepository.save(existingPost);
-        return postConverter.toDTO(savedEntity);
+    public Page<PostEntity> getPostsByPriceRange(double minPrice, double maxPrice, Pageable pageable) {
+        return postRepository.findByStatusAndPriceBetween(PostStatus.APPROVED, minPrice, maxPrice, pageable);
     }
 
     @Override
-    public void deletePost(String id) {
-        PostEntity postEntity = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        postRepository.delete(postEntity);
+    public Page<PostEntity> getPostsByUser(String userId, Pageable pageable) {
+        return postRepository.findByStatusAndCreatedBy(PostStatus.APPROVED, userId, pageable);
     }
 
     @Override
-    public Page<PostDTO> searchPosts(PostSearchDTO criteria, Pageable pageable) {
-        Page<PostEntity> postEntities = postRepository.findByFilters(criteria, pageable);
-        return postEntities.map(postConverter::toDTO);
+    public Page<PostEntity> getAllPostsByUser(String userId, Pageable pageable) {
+        return postRepository.findByCreatedBy(userId, pageable);
+    }
+
+    @Override
+    public Optional<PostEntity> getPostById(String id) {
+        return postRepository.findById(id);
+    }
+
+    @Override
+    public PostResponseDTO createPost(PostEntity post, String userId) {
+        post.setCreatedBy(userId);
+        post.setStatus(PostStatus.PENDING);
+
+        postRepository.save(post);
+
+        return postConverter.toDTO(post);
+    }
+
+    @Override
+    public PostResponseDTO updatePost(String id, PostEntity updatedPost, String userId) {
+        return null;
+    }
+
+    @Override
+    public void deletePost(String id, String userId) {
+
+    }
+
+    @Override
+    public PostResponseDTO approvePost(String id) {
+        return null;
+    }
+
+    @Override
+    public PostResponseDTO rejectPost(String id) {
+        return null;
+    }
+
+    @Override
+    public Page<PostEntity> getPendingPosts(Pageable pageable) {
+        return null;
+    }
+
+    @Override
+    public long countPostsByStatus(PostStatus status) {
+        return 0;
     }
 }
