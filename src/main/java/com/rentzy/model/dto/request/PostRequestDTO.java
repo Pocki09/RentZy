@@ -31,6 +31,8 @@ public class PostRequestDTO {
     @NotBlank(message = "Address is required")
     private String address;
 
+    private String createdBy;
+
     private List<String> images;
     private List<String> utilities;
 }

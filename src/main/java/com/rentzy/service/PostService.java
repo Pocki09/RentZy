@@ -18,7 +18,7 @@ public interface PostService {
     Page<PostEntity> getAllPostsByUser(String userId, Pageable pageable);
     Optional<PostEntity> getPostById(String id);
     PostResponseDTO createPost(PostEntity post, String userId);
-    PostResponseDTO updatePost(String id, PostEntity updatedPost, String userId);
+    PostResponseDTO updatePost(String id, PostRequestDTO updatedPost, String userId);
     void deletePost(String id, String userId);
     PostResponseDTO approvePost(String id);
     PostResponseDTO rejectPost(String id);

@@ -69,8 +69,29 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDTO updatePost(String id, PostEntity updatedPost, String userId) {
-        return null;
+    public PostResponseDTO updatePost(String id, PostRequestDTO updatedPost, String userId) {
+        Optional<PostEntity> post = postRepository.findById(id);
+
+        if (post.isEmpty()){
+            throw new RuntimeException("Post not found with id: " + id);
+        }
+
+        PostEntity existingPost = post.get();
+        if (!existingPost.getCreatedBy().equals(userId)) {
+            throw new RuntimeException("You don't have permission to update this post");
+        }
+
+        existingPost.setPropertyName(updatedPost.getPropertyName());
+        existingPost.setTitle(updatedPost.getTitle());
+        existingPost.setDescription(updatedPost.getDescription());
+        existingPost.setPrice(updatedPost.getPrice());
+        existingPost.setImages(updatedPost.getImages());
+        existingPost.setUtilities(updatedPost.getUtilities());
+
+        existingPost.setStatus(PostStatus.PENDING);
+
+        PostEntity savedPost = postRepository.save(existingPost);
+        return postConverter.toDTO(savedPost);
     }
 
     @Override
