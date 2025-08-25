@@ -96,26 +96,54 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePost(String id, String userId) {
+        Optional<PostEntity> existingPost = postRepository.findById(id);
 
+        if (existingPost.isEmpty()){
+            throw new RuntimeException("Post not found with id: " + id);
+        }
+
+        PostEntity post = existingPost.get();
+        if (!post.getCreatedBy().equals(userId)) {
+            throw new RuntimeException("You don't have permission to delete this post");
+        }
+
+        postRepository.deleteById(id);
     }
 
     @Override
     public PostResponseDTO approvePost(String id) {
-        return null;
+        Optional<PostEntity> existingPost = postRepository.findById(id);
+        if (existingPost.isEmpty()){
+            throw new RuntimeException("Post not found with id: " + id);
+        }
+
+        PostEntity post = existingPost.get();
+        post.setStatus(PostStatus.APPROVED);
+
+        postRepository.save(post);
+        return postConverter.toDTO(post);
     }
 
     @Override
     public PostResponseDTO rejectPost(String id) {
-        return null;
+        Optional<PostEntity> existingPost = postRepository.findById(id);
+        if (existingPost.isEmpty()){
+            throw new RuntimeException("Post not found with id: " + id);
+        }
+
+        PostEntity post = existingPost.get();
+        post.setStatus(PostStatus.REJECTED);
+        postRepository.save(post);
+        return postConverter.toDTO(post);
     }
 
     @Override
     public Page<PostEntity> getPendingPosts(Pageable pageable) {
-        return null;
+        return postRepository.findByStatus(PostStatus.PENDING, pageable);
     }
 
     @Override
     public long countPostsByStatus(PostStatus status) {
-        return 0;
+        return postRepository.countByStatus(status);
     }
 }
