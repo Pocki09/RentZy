@@ -1,81 +1,174 @@
 package com.rentzy.service.impl;
 
 import com.rentzy.converter.ReviewConverter;
-import com.rentzy.exception.ResourceNotFoundException;
-import com.rentzy.model.dto.ReviewDTO;
 import com.rentzy.entity.ReviewEntity;
+import com.rentzy.model.dto.response.ReviewResponseDTO;
 import com.rentzy.repository.ReviewRepository;
 import com.rentzy.service.ReviewService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReviewServiceImpl implements ReviewService {
-    @Autowired
-    private ReviewRepository reviewRepository;
 
-    @Autowired
+    private final ReviewRepository reviewRepository;
     private ReviewConverter reviewConverter;
 
     @Override
-    public Page<ReviewDTO> getAllReviews(Pageable pageable) {
-        Page<ReviewEntity> page = reviewRepository.findAll(pageable);
-        return page.map(reviewConverter::toDTO);
+    public Page<ReviewEntity> getReviewsByPost(String postId, Pageable pageable) {
+        return reviewRepository.findByUserIdOrderByCreatedAtDesc(postId, pageable);
     }
 
     @Override
-    public ReviewDTO getReviewById(String id) {
-        ReviewEntity reviewEntity = reviewRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
-        return reviewConverter.toDTO(reviewEntity);
+    public Page<ReviewEntity> getVerifiedReviewsByPost(String postId, Pageable pageable) {
+        return reviewRepository.findByPostIdAndVerifiedTrueOrderByCreatedAtDesc(postId, pageable);
     }
 
     @Override
-    public ReviewDTO createReview(ReviewDTO reviewDTO) {
-        ReviewEntity reviewEntity = reviewConverter.toEntity(reviewDTO);
-        ReviewEntity savedEntity = reviewRepository.save(reviewEntity);
-        return reviewConverter.toDTO(savedEntity);
+    public Page<ReviewEntity> getReviewsByMinRating(String postId, Integer minRating, Pageable pageable) {
+        return reviewRepository.findByPostIdAndOverallRatingGreaterThanEqualOrderByCreatedAtDesc(postId, minRating, pageable);
     }
 
     @Override
-    public ReviewDTO updateReview(String id, ReviewDTO reviewDTO) {
-        ReviewEntity existingReview = reviewRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
-        reviewConverter.updateReviewFromDto(reviewDTO, existingReview);
-        ReviewEntity savedEntity = reviewRepository.save(existingReview);
-        return reviewConverter.toDTO(savedEntity);
+    public Page<ReviewEntity> getReviewsByTag(String postId, String tag, Pageable pageable) {
+        return reviewRepository.findByPostIdAndTagsContaining(postId, tag, pageable);
     }
 
     @Override
-    public void deleteReview(String id) {
-        ReviewEntity reviewEntity = reviewRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
-        reviewRepository.delete(reviewEntity);
-    }
-
-    @Override
-    public Page<ReviewDTO> getReviewByUserId(String userId, Pageable pageable) {
-        Page<ReviewEntity> reviewEntity = reviewRepository.findByUserId(userId, pageable);
-        if (reviewEntity.isEmpty()) {
-            throw new ResourceNotFoundException("No reviews found for user ID: " + userId);
+    public ReviewResponseDTO createReview(ReviewEntity review, String userId) {
+        if (reviewRepository.existsByPostIdAndUserId(review.getPostId(), userId)) {
+            throw new RuntimeException("You have already reviewed this post");
         }
-        return reviewEntity.map(reviewConverter::toDTO);
+
+        review.setUserId(userId);
+        review.setVerified(false); // Mặc định chưa xác thực
+        review.setReportedBy(new ArrayList<>());
+
+        reviewRepository.save(review);
+        return reviewConverter.toDTO(review);
     }
 
     @Override
-    public Page<ReviewDTO> getReviewByPostId(String postId, Pageable pageable) {
-        Page<ReviewEntity> reviewEntity = reviewRepository.findByPostId(postId, pageable);
-        if (reviewEntity.isEmpty()) {
-            throw new ResourceNotFoundException("No reviews found for post ID: " + postId);
+    public ReviewResponseDTO updateReview(String reviewId, ReviewEntity updatedReview, String userId) {
+        Optional<ReviewEntity> existingOpt = reviewRepository.findById(reviewId);
+
+        if (existingOpt.isEmpty()) {
+            throw new RuntimeException("Review not found");
         }
-        return reviewEntity.map(reviewConverter::toDTO);
+
+        ReviewEntity existing = existingOpt.get();
+        if (!existing.getUserId().equals(userId)) {
+            throw new RuntimeException("You can only edit your own review");
+        }
+
+        existing.setOverallRating(updatedReview.getOverallRating());
+        existing.setComment(updatedReview.getComment());
+        existing.setReviewImages(updatedReview.getReviewImages());
+        existing.setTags(updatedReview.getTags());
+        existing.setRentedFrom(updatedReview.getRentedFrom());
+        existing.setRentedTo(updatedReview.getRentedTo());
+
+        // Reset verified status when edited
+        existing.setVerified(false);
+
+        reviewRepository.save(existing);
+
+        return reviewConverter.toDTO(existing);
     }
 
     @Override
-    public double getAverageRatingByPostId(String postId) {
-        return reviewRepository.findByPostId(postId).stream()
-                .mapToInt(ReviewEntity::getRating)
-                .average()
-                .orElse(0.0);
+    public void deleteReview(String reviewId, String userId) {
+        Optional<ReviewEntity> existingOpt = reviewRepository.findById(reviewId);
+
+        if (existingOpt.isEmpty()) {
+            throw new RuntimeException("Review not found");
+        }
+
+        ReviewEntity existing = existingOpt.get();
+
+        if (!existing.getUserId().equals(userId)) {
+            throw new RuntimeException("You can only delete your own review");
+        }
+
+        reviewRepository.deleteById(reviewId);
+    }
+
+    @Override
+    public ReviewResponseDTO markHelpful(String reviewId) {
+        Optional<ReviewEntity> reviewOpt = reviewRepository.findById(reviewId);
+
+        if (reviewOpt.isEmpty()) {
+            throw new RuntimeException("Review not found");
+        }
+
+        ReviewEntity review = reviewOpt.get();
+        review.setHelpfulCount(review.getHelpfulCount() + 1);
+
+        reviewRepository.save(review);
+
+        return reviewConverter.toDTO(review);
+    }
+
+    @Override
+    public ReviewResponseDTO reportReview(String reviewId, String reporterId) {
+        Optional<ReviewEntity> reviewOpt = reviewRepository.findById(reviewId);
+
+        if (reviewOpt.isEmpty()) {
+            throw new RuntimeException("Review not found");
+        }
+
+        ReviewEntity review = reviewOpt.get();
+
+        if (review.getReportedBy() == null) {
+            review.setReportedBy(new ArrayList<>());
+        }
+
+        // Không cho báo cáo duplicate
+        if (!review.getReportedBy().contains(reporterId)) {
+            review.getReportedBy().add(reporterId);
+        }
+
+        reviewRepository.save(review);
+
+        return reviewConverter.toDTO(review);
+    }
+
+    @Override
+    public ReviewResponseDTO verifyReview(String reviewId) {
+        Optional<ReviewEntity> reviewOpt = reviewRepository.findById(reviewId);
+
+        if (reviewOpt.isEmpty()) {
+            throw new RuntimeException("Review not found");
+        }
+
+        ReviewEntity review = reviewOpt.get();
+        review.setVerified(true);
+
+        reviewRepository.save(review);
+
+        return reviewConverter.toDTO(review);
+    }
+
+    @Override
+    public Page<ReviewEntity> getUnverifiedReviews(Pageable pageable) {
+        return reviewRepository.findByVerifiedFalseOrderByCreatedAtDesc(pageable);
+    }
+
+    @Override
+    public Page<ReviewEntity> getReportedReviews(int minReports, Pageable pageable) {
+        return reviewRepository.findReviewsWithMinReports(minReports, pageable);
+    }
+
+    @Override
+    public long countReviewsByPost(String postId) {
+        return reviewRepository.countByPostId(postId);
     }
 }
