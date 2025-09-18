@@ -1,6 +1,6 @@
 package com.rentzy.controller;
 
-import com.rentzy.enums.UserRole;
+import com.rentzy.enums.user.UserRole;
 import com.rentzy.exception.ResourceNotFoundException;
 import com.rentzy.exception.UserAlreadyExistsException;
 import com.rentzy.model.dto.FilterParams;

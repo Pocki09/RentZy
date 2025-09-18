@@ -1,4 +1,4 @@
-package com.rentzy.service.impl;
+package com.rentzy.controller.auth;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -11,7 +11,7 @@ import com.rentzy.controller.auth.dto.request.RefreshRequest;
 import com.rentzy.controller.auth.dto.response.AuthenticationResponse;
 import com.rentzy.controller.auth.dto.response.IntrospectResponse;
 import com.rentzy.entity.InvalidatedToken;
-import com.rentzy.enums.UserRole;
+import com.rentzy.enums.user.UserRole;
 import com.rentzy.entity.UserEntity;
 import com.rentzy.controller.auth.dto.request.logoutRequest;
 import com.rentzy.repository.InvalidatedTokenRepository;

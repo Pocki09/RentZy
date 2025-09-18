@@ -1,6 +1,6 @@
 package com.rentzy.model.dto.response;
 
-import com.rentzy.enums.UserRole;
+import com.rentzy.enums.user.UserRole;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 

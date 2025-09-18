@@ -16,16 +16,6 @@ import java.util.List;
 public interface NotificationRepository extends MongoRepository<NotificationEntity, String> {
     List<NotificationEntity> findByUserIdOrderByCreatedAtDesc(String userId);
     List<NotificationEntity> findByUserIdAndReadFalseOrderByCreatedAtDesc(String userId);
-
-    long countByUserIdAndReadFalse(String userId);
-
-    Page<NotificationEntity> findByUserIdAndType(String userId, NotificationType type, Pageable pageable);
-    Page<NotificationEntity> findByRelatedEntityIdAndRelatedEntityType(String relatedEntityId, String relatedEntityType, Pageable pageable);
-    Page<NotificationEntity> findByScheduledForBeforeAndReadFalse(Date scheduledFor, Pageable pageable);
-
-    void deleteByCreatedAtBefore(Date createdAt);
-    Page<NotificationEntity> findByUserIdAndRequiresActionTrueAndReadFalse(String userId, Pageable pageable);
-
     List<NotificationEntity> findByScheduledForBeforeAndReadFalse(Date scheduledFor);
     List<NotificationEntity> findByCreatedAtBefore(Date createdAt);
 }

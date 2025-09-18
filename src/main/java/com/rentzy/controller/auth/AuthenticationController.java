@@ -1,4 +1,4 @@
-package com.rentzy.controller.auth.dto;
+package com.rentzy.controller.auth;
 
 import com.nimbusds.jose.JOSEException;
 import com.rentzy.controller.auth.dto.request.AuthenticationRequest;
@@ -8,7 +8,6 @@ import com.rentzy.controller.auth.dto.response.AuthenticationResponse;
 import com.rentzy.controller.auth.dto.response.IntrospectResponse;
 import com.rentzy.controller.auth.dto.request.logoutRequest;
 import com.rentzy.model.dto.response.ApiResponse;
-import com.rentzy.service.impl.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

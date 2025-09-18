@@ -1,6 +1,6 @@
 package com.rentzy.config;
 
-import com.rentzy.enums.UserRole;
+import com.rentzy.enums.user.UserRole;
 import com.rentzy.entity.UserEntity;
 import com.rentzy.repository.UserRepository;
 import lombok.AccessLevel;
