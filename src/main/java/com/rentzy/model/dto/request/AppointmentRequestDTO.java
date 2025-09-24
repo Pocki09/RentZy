@@ -24,4 +24,6 @@ public class AppointmentRequestDTO {
     private String contactPhone;
 
     private String cancelledBy;
+
+    public String AppointmentId;
 }

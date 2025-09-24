@@ -18,8 +18,6 @@ public interface NotificationService {
     void sendAppointmentReminder(AppointmentEntity appointment);
 
     void sendEmailNotification(String recipient, String subject, String content);
-    void sendSMSNotification(String phongNumber, String content);
-    void sendPushNotification(String userId, String title, String message);
 
     NotificationEntity createNotification(NotificationRequestDTO notificationRequestDTO);
     Page<NotificationResponseDTO> getUserNotifications(NotificationRequestDTO request);

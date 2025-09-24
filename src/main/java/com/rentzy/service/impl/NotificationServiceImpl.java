@@ -131,16 +131,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendSMSNotification(String phongNumber, String content) {
-
-    }
-
-    @Override
-    public void sendPushNotification(String userId, String title, String message) {
-
-    }
-
-    @Override
     public NotificationEntity createNotification(NotificationRequestDTO requestDTO) {
         NotificationEntity notificationEntity = new NotificationEntity();
         notificationEntity.setUserId(requestDTO.getUserId());
@@ -474,21 +464,6 @@ public class NotificationServiceImpl implements NotificationService {
             if (email != null){
                 createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.EMAIL, email);
                 sendEmailNotification(email, notificationEntity.getTitle(), notificationEntity.getMessage());
-            }
-        }
-
-        if (settings.isPushEnabled()) {
-            createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.PUSH, notificationEntity.getUserId());
-            sendPushNotification(notificationEntity.getUserId(), notificationEntity.getTitle(), notificationEntity.getMessage());
-        }
-
-        if (settings.isSmsEnabled()) {
-            UserEntity user = userRepository.findById(notificationEntity.getUserId()).
-                    orElseThrow(() -> new RuntimeException("User not found"));
-            String phone = user.getPhone();
-            if (phone != null){
-                createDeliveryRecord(notificationEntity.getId(), notificationEntity.getUserId(), NotificationChanel.SMS, phone);
-                sendSMSNotification(phone, notificationEntity.getMessage());
             }
         }
     }

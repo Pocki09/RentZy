@@ -1,33 +1,33 @@
 package com.rentzy.model.dto.response;
 
 import com.rentzy.enums.user.UserRole;
-import jakarta.validation.constraints.*;
+import com.rentzy.enums.user.UserStatus;
 import lombok.Data;
+
+import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 public class UserResponseDTO {
-    @NotNull
     private String id;
-
-    @NotBlank(message = "Username is required")
-    @Size(max = 50, message = "Username chỉ chứa tối đa 50 kí tự")
     private String username;
-
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Size(max = 100, message = "Email chỉ chứa tối đa 100 kí tự")
     private String email;
+    private String fullName;
+    private LocalDate dateOfBirth;
+    private String phone;
+    private String avatar;
 
     private UserRole role;
+    private UserStatus status;
 
-    @NotBlank(message = "Full name là bắt buộc")
-    @Size(max = 100, message = "Full name chỉ chứa tối đa 100 kí tự")
-    private String fullName;
+    // Student info
+    private String university;
+    private String studentId;
+    private Double maxBudget;
 
-    @NotBlank(message = "Phone là bắt buộc")
-    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{10,12}$", message = "Phone phải hợp lệ")
-    private String phone;
+    // Verification status
+    private boolean emailVerified;
+    private boolean identityVerified;
 
-    private String dob;
-    private String avatar;
+    private Instant createdAt;
 }
