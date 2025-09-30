@@ -8,6 +8,7 @@ import com.rentzy.model.dto.response.PostResponseDTO;
 import com.rentzy.repository.PostRepository;
 import com.rentzy.service.PostService;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,12 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
-@NoArgsConstructor
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostServiceImpl implements PostService {
 
-    private PostRepository postRepository;
-    private PostConverter postConverter;
+    private final PostRepository postRepository;
+    private final PostConverter postConverter;
 
     @Override
     public Page<PostEntity> searchPosts(PostRequestDTO criteria, Pageable pageable) {
@@ -59,6 +60,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponseDTO createPost(PostEntity post, String userId) {
         post.setCreatedBy(userId);
         post.setStatus(PostStatus.PENDING);

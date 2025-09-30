@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.Instant;
@@ -44,26 +45,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO registerStudent(UserRequestDTO user) {
 
         UserEntity userEntity = userConverter.toEntity(user);
 
         validateNewUser(userEntity);
 
-        userEntity = UserEntity.builder()
-                .password(passwordEncoder.encode(user.getPassword()))
-                .role(UserRole.STUDENT)
-                .status(UserStatus.PENDING)
-                .emailVerified(false)
-                .identityVerified(false)
-                .loginAttempts(0)
-                .emailVerificationToken(UUID.randomUUID().toString())
-                .emailVerificationExpiry(Instant.now().plus(24, ChronoUnit.HOURS))
-                .build();
+        userEntity.setPassword(passwordEncoder.encode(user.getPassword()));
+        userEntity.setRole(UserRole.STUDENT);
+        userEntity.setStatus(UserStatus.PENDING);
+        userEntity.setEmailVerified(false);
+        userEntity.setIdentityVerified(false);
+        userEntity.setLoginAttempts(0);
+        userEntity.setEmailVerificationToken(UUID.randomUUID().toString());
+        userEntity.setEmailVerificationExpiry(Instant.now().plus(24, ChronoUnit.HOURS));
 
         UserEntity savedUser = userRepository.save(userEntity);
-
-
 
         log.info("Student registered: {} from university: {}",
                 savedUser.getUsername(), savedUser.getUniversity());
@@ -72,21 +70,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO registerLandlord(UserRequestDTO user) {
         UserEntity userEntity = userConverter.toEntity(user);
 
         validateNewUser(userEntity);
 
-        userEntity = UserEntity.builder()
-                .password(passwordEncoder.encode(user.getPassword()))
-                .role(UserRole.LANDLORD)
-                .status(UserStatus.PENDING)
-                .emailVerified(false)
-                .identityVerified(false)
-                .loginAttempts(0)
-                .emailVerificationToken(UUID.randomUUID().toString())
-                .emailVerificationExpiry(Instant.now().plus(24, ChronoUnit.HOURS))
-                .build();
+        userEntity.setPassword(passwordEncoder.encode(user.getPassword()));
+        userEntity.setRole(UserRole.LANDLORD);
+        userEntity.setStatus(UserStatus.PENDING);
+        userEntity.setEmailVerified(false);
+        userEntity.setIdentityVerified(false);
+        userEntity.setLoginAttempts(0);
+        userEntity.setEmailVerificationToken(UUID.randomUUID().toString());
+        userEntity.setEmailVerificationExpiry(Instant.now().plus(24, ChronoUnit.HOURS));
 
         UserEntity savedUser = userRepository.save(userEntity);
         log.info("Landlord registered: {}", savedUser.getUsername());
@@ -95,6 +92,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public boolean verifyEmail(String token) {
         Optional<UserEntity> userOpt = userRepository.findByEmailVerificationToken(token);
 
@@ -108,11 +106,9 @@ public class UserServiceImpl implements UserService {
             return false; // Token expired
         }
 
-        user = UserEntity.builder()
-                .emailVerified(true)
-                .emailVerificationToken(null)
-                .emailVerificationExpiry(null)
-                .build();
+        user.setEmailVerified(true);
+        user.setEmailVerificationToken(null);
+        user.setEmailVerificationExpiry(null);
 
         // Auto-activate student sau khi verify email
         if (user.getRole() == UserRole.STUDENT) {
@@ -125,6 +121,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void resendEmailVerification(String email) {
         Optional<UserEntity> userOpt = userRepository.findByEmail(email);
 
@@ -139,6 +136,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO updateProfile(String userId, UserRequestDTO updatedUser) {
         Optional<UserEntity> userOpt = userRepository.findById(userId);
 
@@ -148,19 +146,15 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userOpt.get();
 
-        user = UserEntity.builder()
-                .fullName(updatedUser.getFullName())
-                .dateOfBirth(updatedUser.getDateOfBirth())
-                .emergencyContact(updatedUser.getEmergencyContact())
-                .emergencyPhone(updatedUser.getEmergencyPhone())
-                .build();
+        user.setFullName(updatedUser.getFullName());
+        user.setDateOfBirth(updatedUser.getDateOfBirth());
+        user.setEmergencyContact(updatedUser.getEmergencyContact());
+        user.setEmergencyPhone(updatedUser.getEmergencyPhone());
 
         if (user.getRole() == UserRole.STUDENT) {
-            user = UserEntity.builder()
-                    .university(updatedUser.getUniversity())
-                    .studentId(updatedUser.getStudentId())
-                    .maxBudget(updatedUser.getMaxBudget())
-                    .build();
+            user.setUniversity(updatedUser.getUniversity());
+            user.setStudentId(updatedUser.getStudentId());
+            user.setMaxBudget(updatedUser.getMaxBudget());
         }
 
         if (updatedUser.getPhone() != null && !updatedUser.getPhone().equals(user.getPhone())) {
@@ -175,6 +169,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO updateAvatar(String userId, String avatarUrl) {
 
         Optional<UserEntity> userOpt = userRepository.findById(userId);
@@ -191,6 +186,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO submitIdentityVerification(String userId, String nationalId) {
         Optional<UserEntity> userOpt = userRepository.findById(userId);
 
@@ -204,10 +200,8 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userOpt.get();
 
-        user = UserEntity.builder()
-                .nationalId(nationalId)
-                .identityVerified(false)
-                .build();
+        user.setNationalId(nationalId);
+        user.setIdentityVerified(false);
 
         userRepository.save(user);
         log.info("Identity verification submitted for user: {}", user.getUsername());
@@ -216,6 +210,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO approveIdentityVerification(String userId) {
 
         Optional<UserEntity> userOpt = userRepository.findById(userId);
@@ -239,6 +234,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void recordLoginAttempt(String username, boolean success) {
         Optional<UserEntity> userOpt = userRepository.findByUsernameOrEmail(username, username);
 

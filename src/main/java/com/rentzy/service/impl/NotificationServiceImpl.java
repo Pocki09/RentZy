@@ -12,7 +12,7 @@ import com.rentzy.model.dto.response.NotificationResponseDTO;
 import com.rentzy.model.dto.response.UserNotificationSettingsResponseDTO;
 import com.rentzy.repository.*;
 import com.rentzy.service.NotificationService;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,19 +27,19 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
-    private NotificationRepository notificationRepository;
-    private NotificationDeliveryRepository notificationDeliveryRepository;
-    private UserNotificationSettingsRepository userNotificationSettingsRepository;
-    private NotificationConverter notificationConverter;
-    private UserNotificationSettingsConverter userNotificationSettingsConverter;
-    private JavaMailSender javaMailSender;
-    private UserRepository userRepository;
-    private PostRepository postRepository;
+    private final NotificationRepository notificationRepository;
+    private final NotificationDeliveryRepository notificationDeliveryRepository;
+    private final UserNotificationSettingsRepository userNotificationSettingsRepository;
+    private final NotificationConverter notificationConverter;
+    private final UserNotificationSettingsConverter userNotificationSettingsConverter;
+    private final JavaMailSender javaMailSender;
+    private final UserRepository userRepository;
+    private final PostRepository postRepository;
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 

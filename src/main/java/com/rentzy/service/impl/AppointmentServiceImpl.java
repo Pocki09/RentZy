@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -26,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
 
-    private AppointmentRepository appointmentRepository;
-    private AppointmentConverter appointmentConverter;
-    private NotificationService notificationService;
-    private PostRepository postRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final AppointmentConverter appointmentConverter;
+    private final NotificationService notificationService;
+    private final PostRepository postRepository;
 
     private static final int MIN_ADVANCE_BOOKING_HOURS = 2;
     private static final int BUSINESS_HOUR_START = 9;
@@ -37,6 +38,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private static final int DEFAULT_APPOINTMENT_DURATION = 60;
 
     @Override
+    @Transactional
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO request) {
 
         Optional<PostEntity> post = postRepository.findById(request.getPostId());
@@ -64,27 +66,38 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public Optional<AppointmentResponseDTO> getAppointmentById(String id) {
-        return Optional.empty();
+        return appointmentRepository.findById(id).map(appointmentConverter::toDTO);
     }
 
     @Override
     public Page<AppointmentResponseDTO> getAppointmentsByPostId(String postId, Pageable pageable) {
-        return null;
+        return appointmentRepository.findByPostId(postId, pageable).map(appointmentConverter::toDTO);
     }
 
     @Override
     public Page<AppointmentResponseDTO> getAppointmentsByUserId(String userId, Pageable pageable) {
-        return null;
+        return appointmentRepository.findByUserId(userId, pageable).map(appointmentConverter::toDTO);
     }
 
     @Override
     public Page<AppointmentResponseDTO> getAppointmentsByOwnerId(String ownerId, Pageable pageable) {
-        return null;
+        return appointmentRepository.findByOwnerId(ownerId, pageable).map(appointmentConverter::toDTO);
     }
 
     @Override
     public Page<AppointmentResponseDTO> getAppointmentsByDate(Date date, Pageable pageable) {
-        return null;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY,0);
+        calendar.set(Calendar.MINUTE,0);
+        calendar.set(Calendar.SECOND,0);
+        calendar.set(Calendar.MILLISECOND,0);
+
+        Date start = calendar.getTime();
+        calendar.add(Calendar.DAY_OF_MONTH,1);
+        Date end = calendar.getTime();
+
+        return appointmentRepository.findByAppointmentDateBetween(start,end,pageable).map(appointmentConverter::toDTO);
     }
 
     @Override
@@ -94,7 +107,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment is not found");
         }
 
-        if (!isOwner(appointmentId, ownerId)){
+        if (!isOwner(appointmentEntity, ownerId)){
             throw new IllegalArgumentException("only owner can confirm appointment");
         }
 
@@ -119,12 +132,12 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment is not found");
         }
 
-        if (!isOwner(appointmentId, currentUserId) && !isUser(appointmentId, currentUserId)){
+        if (!isOwner(appointmentEntity, currentUserId) && !isUser(appointmentEntity, currentUserId)){
             throw new IllegalArgumentException("you are not authorized to cancel this appointment");
         }
 
         if (appointmentEntity.getStatus() != AppointmentStatus.PENDING){
-            throw new IllegalArgumentException("Can only confirm pending appointments. Current status: " + appointmentEntity.getStatus());
+            throw new IllegalArgumentException("Can only cancel pending appointments. Current status: " + appointmentEntity.getStatus());
         }
 
         appointmentEntity.setStatus(AppointmentStatus.CANCELLED);
@@ -144,7 +157,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment is not found");
         }
 
-        if (!isOwner(appointmentId, ownerId)){
+        if (!isOwner(appointmentEntity, ownerId)){
             throw new IllegalArgumentException("only owner can reject appointment");
         }
 
@@ -169,7 +182,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment is not found");
         }
 
-        if (!isOwner(appointmentId, ownerId)){
+        if (!isOwner(appointmentEntity, ownerId)){
             throw new IllegalArgumentException("only owner can complete appointment");
         }
 
@@ -194,8 +207,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment is not found");
         }
 
-        if (!isOwner(request.getAppointmentId(), request.getUserId()) && !isUser(request.getAppointmentId(), request.getUserId())){
-            throw new IllegalArgumentException("you are not authorized to cancel this appointment");
+        if (!isOwner(appointmentEntity, request.getUserId()) && !isUser(appointmentEntity, request.getUserId())){
+            throw new IllegalArgumentException("you are not authorized to reschedule this appointment");
         }
 
         if (appointmentEntity.getStatus() == AppointmentStatus.COMPLETED
@@ -267,7 +280,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private void validateNoConflict(AppointmentRequestDTO request) {
         Date startTime = request.getAppointmentDate();
-        Date endTime = new Date(startTime.getTime() + TimeUnit.MINUTES.toMillis(request.getDurationMinutes()));
+        int duration =  request.getDurationMinutes() != null ? request.getDurationMinutes() : DEFAULT_APPOINTMENT_DURATION;
+        Date endTime = new Date(startTime.getTime() + TimeUnit.MINUTES.toMillis(duration));
 
         List<AppointmentEntity> conflictingAppointments = appointmentRepository.findConflictingAppointments(request.getPostId(), startTime, AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING);
 
@@ -286,23 +300,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
-    private boolean isOwner(String appointmentId, String userId){
-        Optional<AppointmentEntity> appointment = appointmentRepository.findById(appointmentId);
-        if (appointment.isEmpty()){
-            return false;
-        }
-
-        AppointmentEntity appointmentEntity = appointment.get();
-        return appointmentEntity.getOwnerId().equals(userId);
+    private boolean isOwner(AppointmentEntity appointment, String userId){
+        return appointment.getOwnerId().equals(userId);
     }
 
-    private boolean isUser(String appointmentId, String userId){
-        Optional<AppointmentEntity> appointment = appointmentRepository.findById(appointmentId);
-        if (appointment.isEmpty()){
-            return false;
-        }
-
-        AppointmentEntity appointmentEntity = appointment.get();
-        return appointmentEntity.getUserId().equals(userId);
+    private boolean isUser(AppointmentEntity appointment, String userId){
+        return appointment.getUserId().equals(userId);
     }
 }

@@ -20,7 +20,7 @@ import java.util.Optional;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private ReviewConverter reviewConverter;
+    private final ReviewConverter reviewConverter;
 
     @Override
     public Page<ReviewEntity> getReviewsByPost(String postId, Pageable pageable) {
@@ -43,6 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public ReviewResponseDTO createReview(ReviewEntity review, String userId) {
         if (reviewRepository.existsByPostIdAndUserId(review.getPostId(), userId)) {
             throw new RuntimeException("You have already reviewed this post");

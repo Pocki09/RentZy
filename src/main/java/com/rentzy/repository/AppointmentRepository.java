@@ -37,7 +37,7 @@ public interface AppointmentRepository extends MongoRepository<AppointmentEntity
 
     Page<AppointmentEntity> findByStatus(AppointmentStatus status, Pageable pageable);
 
-    Page<AppointmentEntity> findByDateBetween(Date startDate, Date endDate, Pageable pageable);
+    Page<AppointmentEntity> findByAppointmentDateBetween(Date startDate, Date endDate, Pageable pageable);
 
     @Query(value = "{'status': ?0}", count = true)
     long countAppointmentsByStatus(AppointmentStatus status);
